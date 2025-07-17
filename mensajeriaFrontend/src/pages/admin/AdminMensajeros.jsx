@@ -225,7 +225,6 @@ const decoded = decodeToken(token);
     let response;
     
     if (editingMensajero.id) {
-      console.log('🟡 Payload que se envía:', mensajeroData);
 
       response = await axios.put(
         `/proxy/api/mensajeros/${editingMensajero.id}`,
@@ -1113,6 +1112,7 @@ const decoded = decodeToken(token);
                 className="btn btn-secondary"
                 onClick={handleCancelar}
               >
+                <i className="bi bi-x-circle me-1"></i>
                 Cancelar
               </button>
             </div>

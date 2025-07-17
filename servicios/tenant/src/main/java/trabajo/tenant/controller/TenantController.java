@@ -121,11 +121,11 @@ public class TenantController {
 
     @PutMapping("/{id}/admin-mensajeria")
     public ResponseEntity<TenantDTO> asociarAdminMensajeria(
-            @PathVariable Long tenantId,
+            @PathVariable Long id,  
             @RequestBody Map<String, Long> request) {
         try {
             Long adminMensajeriaId = request.get("adminMensajeriaId");
-            TenantDTO tenant = tenantService.asociarAdminMensajeria(tenantId, adminMensajeriaId);
+            TenantDTO tenant = tenantService.asociarAdminMensajeria(id, adminMensajeriaId);
             return ResponseEntity.ok(tenant);
         } catch (NoSuchElementException e) {
             return ResponseEntity.notFound().build();

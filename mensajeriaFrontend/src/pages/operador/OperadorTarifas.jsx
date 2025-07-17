@@ -926,6 +926,7 @@ export default function OperadorTarifas() {
                     className="btn btn-secondary"
                     disabled={submitting}
                   >
+                    <i className="bi bi-x-circle me-1"></i>
                     Cancelar
                   </button>
                 </div>

@@ -29,6 +29,10 @@ export default function SuperTenants() {
   const [filtroEstado, setFiltroEstado] = useState('');
   const [vista, setVista] = useState('lista');
   const formRef = useRef(null);
+  const [modalAdminVisible, setModalAdminVisible] = useState(false);
+  const [administradores, setAdministradores] = useState([]);
+  const [adminSeleccionado, setAdminSeleccionado] = useState('');
+  const [tenantParaAsociar, setTenantParaAsociar] = useState(null);
 
   const token = localStorage.getItem('token');
   const headers = {
@@ -42,7 +46,6 @@ export default function SuperTenants() {
 
   const cargarDatos = async () => {
     setLoading(true);
-    console.log("cargarDatos ...");
     
     try {
       const [tenantsRes, planesRes, estadosRes] = await Promise.all([
@@ -50,10 +53,6 @@ export default function SuperTenants() {
         axios.get('/tenant/api/planes', { headers }),
         axios.get('/tenant/api/estados', { headers })
       ]);
-
-      console.log('tenantsRes -> ', tenantsRes);
-      console.log('planesRes -> ', planesRes);
-      console.log('estadosRes -> ', estadosRes);
 
       setTenants(tenantsRes.data, []);
       setPlanes(planesRes.data, []);
@@ -121,7 +120,6 @@ export default function SuperTenants() {
   };
 
   const validarFormulario = () => {
-    console.log('Validando formulario con datos:', editingTenant);
     
     const erroresValidacion = {};
     
@@ -133,12 +131,9 @@ export default function SuperTenants() {
       }
     });
     
-    console.log('Errores encontrados:', erroresValidacion);
     
     setErrores(erroresValidacion);
     const esValido = Object.keys(erroresValidacion).length === 0;
-    
-    console.log('¿Formulario válido?', esValido);
     
     return esValido;
   };
@@ -146,15 +141,9 @@ export default function SuperTenants() {
   const handleGuardar = async (e) => {
     e.preventDefault();
     
-    console.log('1. Iniciando handleGuardar');
-    console.log('2. Datos del tenant:', editingTenant);
-    
     if (!validarFormulario()) {
-      console.log('3. Validación falló');
       return;
     }
-    
-    console.log('4. Validación pasó, enviando datos...');
 
     try {
       const url = editingTenant.id 
@@ -163,12 +152,31 @@ export default function SuperTenants() {
       
       const method = editingTenant.id ? axios.put : axios.post;
 
-      console.log('5. URL:', url);
-      console.log('6. Datos enviados:', editingTenant);
-
       const response = await method(url, editingTenant, { headers });
       
-      console.log('7. Respuesta exitosa:', response.data);
+      const empresaData = {
+        tenantId: editingTenant.id ? editingTenant.id : response.data.id, 
+        nombre: editingTenant.nombreEmpresa,
+        direccion: '', 
+        telefono: '', 
+        email: editingTenant.emailContacto,
+        estadoId: 1 
+      };
+      
+      
+      try {
+        if (editingTenant.id) {
+          await axios.put(`/proxy/api/empresas-mensajeria/${editingTenant.id}`, empresaData, { headers });
+        } else {
+          await axios.post('/proxy/api/empresas-mensajeria', empresaData, { headers });
+        }
+        
+      } catch (empresaError) {
+        console.error('Error al procesar empresa de mensajería:', empresaError);
+        console.error('Response data:', empresaError.response?.data);
+        const action = editingTenant.id ? 'actualizar' : 'crear';
+        alert(`Tenant ${editingTenant.id ? 'actualizado' : 'creado'} correctamente, pero hubo un error al ${action} la empresa de mensajería: ${empresaError.response?.data?.error || empresaError.message}`);
+      }
       
       setFormVisible(false);
       setEditingTenant(null);
@@ -178,8 +186,8 @@ export default function SuperTenants() {
       cargarDatos();
       
     } catch (error) {
-      console.error('8. Error al guardar tenant:', error);
-      console.error('9. Response data:', error.response?.data);
+      console.error('Error al guardar tenant:', error);
+      console.error('Response data:', error.response?.data);
       alert(`Error al guardar tenant: ${error.response?.data?.message || error.message}`);
     }
   };
@@ -211,13 +219,108 @@ export default function SuperTenants() {
   const handleEliminar = async (id) => {
     if (confirm('¿Eliminar tenant?')) {
       try {
+        try {
+          await axios.delete(`/proxy/api/empresas-mensajeria/${id}`, { headers });
+        } catch (empresaError) {
+          console.error('Error al eliminar empresa de mensajería:', empresaError);
+          console.error('Response data:', empresaError.response?.data);
+          const errorMsg = empresaError.response?.data?.error || empresaError.message;
+          console.warn(`Advertencia: Error al eliminar empresa de mensajería: ${errorMsg}`);
+        }
+        
         await axios.delete(`/tenant/api/tenants/${id}`, { headers });
         cargarDatos();
         alert('Tenant eliminado correctamente');
+        
       } catch (error) {
         console.error('Error al eliminar tenant:', error);
-        alert('Error al eliminar tenant');
+        console.error('Response data:', error.response?.data);
+        alert(`Error al eliminar tenant: ${error.response?.data?.message || error.message}`);
       }
+    }
+  };
+
+  const cargarAdministradoresDisponibles = async () => {
+    try {
+      const meRes = await axios.get('/proxy/api/auth/me', { headers });
+      const usuarioActual = meRes.data.data;
+      
+      const usuariosRes = await axios.get('/proxy/api/usuarios/admin-mensajeria', { headers });
+      
+      const usuariosFiltrados = (usuariosRes.data.data || []).filter(usuario => {
+        return usuario.id !== usuarioActual.id && 
+              usuario.rolId === 2 && 
+              !usuario.empresaId; 
+      });
+      
+      setAdministradores(usuariosFiltrados);
+    } catch (error) {
+      console.error('Error al cargar administradores:', error);
+      alert('Error al cargar administradores disponibles');
+    }
+  };
+
+  const handleAsociarAdmin = (tenant) => {
+    setTenantParaAsociar(tenant);
+    setAdminSeleccionado('');
+    setModalAdminVisible(true);
+    cargarAdministradoresDisponibles();
+  };
+
+  const handleDesasociarAdmin = async (tenant) => {
+    try {
+      await axios.put(`/tenant/api/tenants/${tenant.id}/admin-mensajeria`, {
+        adminMensajeriaId: null
+      }, { headers });
+      
+      setTenants(prevTenants => 
+        prevTenants.map(t => 
+          t.id === tenant.id 
+            ? { ...t, idAdminMensajeria: null, adminNombre: null }
+            : t
+        )
+      );
+      
+      alert('Administrador desasociado correctamente');
+      
+    } catch (error) {
+      console.error('Error al desasociar administrador:', error);
+      alert('Error al desasociar administrador');
+    }
+  };
+
+  const confirmarAsociacion = async () => {
+    try {
+      await axios.put(`/tenant/api/tenants/${tenantParaAsociar.id}/admin-mensajeria`, {
+        adminMensajeriaId: parseInt(adminSeleccionado)
+      }, { headers });
+      
+      await axios.put(`/proxy/api/usuarios/${adminSeleccionado}`, {
+        mensajeriaId: tenantParaAsociar.id
+      }, { headers });
+      
+      setTenants(prevTenants => 
+        prevTenants.map(t => 
+          t.id === tenantParaAsociar.id 
+            ? { 
+                ...t, 
+                idAdminMensajeria: adminSeleccionado,
+                adminNombre: administradores.find(admin => admin.id === adminSeleccionado)?.nombres + ' ' + 
+                            administradores.find(admin => admin.id === adminSeleccionado)?.apellidos
+              }
+            : t
+        )
+      );
+      
+      setModalAdminVisible(false);
+      setTenantParaAsociar(null);
+      setAdminSeleccionado('');
+      
+      alert('Administrador asociado correctamente');
+      
+    } catch (error) {
+      console.error('Error al asociar administrador:', error);
+      alert('Error al asociar administrador');
     }
   };
 
@@ -364,6 +467,19 @@ export default function SuperTenants() {
                     </div>
                   </div>
 
+                  {/* Mostrar información del administrador si está asignado */}
+                  {tenant.idAdminMensajeria && (
+                    <div className="mb-2">
+                      <div className="text-muted small">
+                        <i className="bi bi-person-check me-1" style={{ color: '#28a745' }}></i>
+                        Administrador:
+                      </div>
+                      <div className="fw-semibold small" style={{ color: '#28a745' }}>
+                        {tenant.adminNombre || `Admin ID: ${tenant.idAdminMensajeria}`}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="row text-center mb-2">
                     <div className="col-6">
                       <div className="text-muted small">Usuarios disponibles</div>
@@ -416,6 +532,27 @@ export default function SuperTenants() {
                   >
                     <i className="bi bi-pencil-square me-1"></i>Editar
                   </button>
+                  
+                    
+                        {tenant.idAdminMensajeria ? (
+                          <button
+                            className="btn btn-sm btn-outline-orange"
+                            onClick={() => handleDesasociarAdmin(tenant)}
+                            title="Desasociar Administrador"
+                          >
+                            <i className="bi bi-person-dash me-1"></i>Desasociar
+                          </button>
+                        ) : (
+                          <button
+                            className="btn btn-sm btn-outline-info"
+                            onClick={() => handleAsociarAdmin(tenant)}
+                            title="Asociar Administrador"
+                          >
+                            <i className="bi bi-person-plus me-1"></i>Asociar
+                          </button>
+                        )}
+
+                  
                   {tenant.estadoId === 1 ? ( 
                     <button
                       className="btn btn-sm btn-outline-warning"
@@ -619,13 +756,34 @@ export default function SuperTenants() {
                       <button 
                         className="btn btn-outline-primary" 
                         onClick={() => handleEditar(tenant)}
+                        title="Editar"
                       >
                         <i className="bi bi-pencil"></i>
                       </button>
+                      
+                      {tenant.idAdminMensajeria ? (
+                      <button
+                        className="btn btn-outline-orange"
+                        onClick={() => handleDesasociarAdmin(tenant)}
+                        title="Desasociar Administrador"
+                      >
+                        <i className="bi bi-person-dash"></i>
+                      </button>
+                    ) : (
+                      <button
+                        className="btn btn-outline-info"
+                        onClick={() => handleAsociarAdmin(tenant)}
+                        title="Asociar Administrador"
+                      >
+                        <i className="bi bi-person-plus"></i>
+                      </button>
+                    )}
+
                       {tenant.estadoId === 1 ? ( 
                         <button 
                           className="btn btn-outline-warning"
                           onClick={() => handleDesactivar(tenant.id)}
+                          title="Desactivar"
                         >
                           <i className="bi bi-pause"></i>
                         </button>
@@ -633,6 +791,7 @@ export default function SuperTenants() {
                         <button 
                           className="btn btn-outline-success"
                           onClick={() => handleActivar(tenant.id)}
+                          title="Activar"
                         >
                           <i className="bi bi-play"></i>
                         </button>
@@ -640,6 +799,7 @@ export default function SuperTenants() {
                       <button 
                         className="btn btn-outline-danger"
                         onClick={() => handleEliminar(tenant.id)}
+                        title="Eliminar"
                       >
                         <i className="bi bi-trash"></i>
                       </button>
@@ -650,6 +810,93 @@ export default function SuperTenants() {
             })}
           </tbody>
         </table>
+      </div>
+    );
+  };
+
+  const renderModalAsociarAdmin = () => {
+    return (
+      <div className={`modal fade ${modalAdminVisible ? 'show' : ''}`} 
+          style={{ display: modalAdminVisible ? 'block' : 'none' }}
+          tabIndex="-1">
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">
+                <i className="bi bi-person-plus me-2"></i>
+                Asociar Administrador
+              </h5>
+              <button 
+                type="button" 
+                className="btn-close" 
+                onClick={() => setModalAdminVisible(false)}
+              ></button>
+            </div>
+            <div className="modal-body">
+              {tenantParaAsociar && (
+                <div className="mb-3">
+                  <h6 className="text-muted">Tenant seleccionado:</h6>
+                  <div className="d-flex align-items-center">
+                    <div 
+                      className="rounded-circle me-2 d-flex align-items-center justify-content-center"
+                      style={{ 
+                        width: '30px', 
+                        height: '30px', 
+                        backgroundColor: `${obtenerColorPlan(tenantParaAsociar.planId)}20`,
+                        color: obtenerColorPlan(tenantParaAsociar.planId)
+                      }}
+                    >
+                      <i className={`bi ${obtenerIconoPlan(tenantParaAsociar.planId)}`}></i>
+                    </div>
+                    <strong>{tenantParaAsociar.nombreEmpresa}</strong>
+                  </div>
+                </div>
+              )}
+              
+              <div className="mb-3">
+                <label className="form-label">Seleccionar Administrador:</label>
+                <select 
+                  className="form-select" 
+                  value={adminSeleccionado}
+                  onChange={(e) => setAdminSeleccionado(e.target.value)}
+                >
+                  <option value="" disabled hidden>Selecciona un administrador</option>
+                  {administradores.map(admin => (
+                    <option key={admin.id} value={admin.id}>
+                      {admin.nombres} {admin.apellidos} - {admin.email}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              {administradores.length === 0 && (
+                <div className="alert alert-info">
+                  <i className="bi bi-info-circle me-2"></i>
+                  No hay administradores disponibles para asociar.
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button 
+                type="button" 
+                className="btn btn-primary"
+                onClick={confirmarAsociacion}
+                disabled={!adminSeleccionado}
+              >
+                <i className="bi bi-check-lg me-2"></i>
+                Asociar
+              </button>
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                onClick={() => setModalAdminVisible(false)}
+              >
+                <i className="bi bi-x-circle me-1"></i>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   };
@@ -879,22 +1126,6 @@ export default function SuperTenants() {
                       <div className="invalid-feedback">{errores.planId}</div>
                     )}
                   </div>
-
-                  <div className="col-md-6 mb-3">
-                    <label className="form-label">
-                      <i className="bi bi-person-badge me-1" style={{ color: '#6c757d' }}></i>
-                      Admin de mensajería (opcional)
-                    </label>
-                    <select
-                      name="idAdminMensajeria"
-                      value={editingTenant?.idAdminMensajeria || ''}
-                      onChange={handleInputChange}
-                      className="form-select"
-                    >
-                      <option value="">Sin asignar</option>
-                      {/* Info de admins */}
-                    </select>
-                  </div>
                 </div>
 
                 <div className="d-flex justify-content-end gap-2">
@@ -906,6 +1137,7 @@ export default function SuperTenants() {
                     className="btn btn-secondary"
                     onClick={handleCancelar}
                   >
+                   <i className="bi bi-x-circle me-1"></i>
                     Cancelar
                   </button>
                 </div>
@@ -940,6 +1172,11 @@ export default function SuperTenants() {
         )}
       </div>      
       <Footer />
+
+      {renderModalAsociarAdmin()}
+      {modalAdminVisible && (
+        <div className="modal-backdrop fade show"></div>
+      )}
     </>
   );
 }

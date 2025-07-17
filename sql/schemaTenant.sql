@@ -150,8 +150,7 @@ DELIMITER ;
 INSERT INTO estado (nombre, descripcion) VALUES 
 ('ACTIVO', 'Tenant activo y funcional'),
 ('INACTIVO', 'Tenant temporalmente inactivo'),
-('SUSPENDIDO', 'Tenant suspendido por incumplimiento'),
-('BLOQUEADO', 'Tenant bloqueado permanentemente');
+('SUSPENDIDO', 'Tenant suspendido por incumplimiento');
 
 -- Planes básicos
 INSERT INTO plan (nombre, descripcion, precio_mensual, limite_usuarios, limite_pedidos_mes, limite_pedidos_simultaneos) VALUES 
@@ -166,4 +165,4 @@ INSERT INTO tenant (nombre_empresa, email_contacto, id_admin_mensajeria, estado_
 ('Express Delivery LTDA', 'info@expressdelivery.com', 2, 1, 2, NOW() - INTERVAL 2 DAY), -- ACTIVO, PROFESIONAL
 ('Domicilios Norte', 'contacto@domiciliosnorte.com', 3, 2, 3, NULL), -- INACTIVO, EMPRESARIAL
 ('MegaCourier S.A', 'soporte@megacourier.com', NULL, 3, 4, NOW() - INTERVAL 5 DAY), -- SUSPENDIDO, ILIMITADO
-('Eco Envíos SAS', 'admin@ecoenvios.com', NULL, 4, 2, NOW() - INTERVAL 10 DAY); -- BLOQUEADO, PROFESIONAL
+('Eco Envíos SAS', 'admin@ecoenvios.com', NULL, 3, 2, NOW() - INTERVAL 10 DAY); -- SUSPENDIDO, PROFESIONAL

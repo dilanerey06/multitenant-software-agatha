@@ -95,13 +95,11 @@ export default function AdminInformacion() {
     }
 
     setErrores(nuevosErrores);
-    console.log("Errores de validación:", nuevosErrores);
     return Object.keys(nuevosErrores).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Intentando guardar cambios...");
 
     const cambiosRealizados =
       form.email !== usuario.email ||

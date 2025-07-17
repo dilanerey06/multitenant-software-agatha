@@ -344,6 +344,7 @@ export default function OperadorClientes() {
         descuentoPorcentaje: editingCliente.descuentoPorcentaje ? 
           parseFloat(editingCliente.descuentoPorcentaje) : 0,
         estadoId: parseInt(editingCliente.estadoId) || 1,
+        ultimoPedido: editingCliente.ultimoPedido || null,
         direcciones: editingCliente.direcciones?.map(clienteDireccion => ({
           direccion: {
             ciudad: clienteDireccion.direccion.ciudad.trim(),
@@ -520,10 +521,15 @@ export default function OperadorClientes() {
       nuevasDirecciones[0].esPredeterminadaEntrega = true;
     }
     
-    setEditingCliente(prev => ({
-      ...prev,
-      direcciones: [...(prev.direcciones || []), ...nuevasDirecciones]
-    }));
+      setEditingCliente(prev => {
+      const nuevoCliente = {
+        ...prev,
+        direcciones: [...(prev.direcciones || []), ...nuevasDirecciones],
+        ultimoPedido: pedido.fechaEntrega
+      };
+      
+      return nuevoCliente;
+    });
     
     setModalPedidosVisible(false);
   };
@@ -1464,6 +1470,7 @@ export default function OperadorClientes() {
                       setErrores({});
                     }}
                   >
+                    <i className="bi bi-x-circle me-1"></i>
                     Cancelar
                   </button>
                 </div>

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -175,17 +176,46 @@ public class EmpresaMensajeriaController {
      * @return Empresa creada
      */
     @PostMapping
+    @SuppressWarnings({"UnnecessaryTemporaryOnConversionFromString", "CallToPrintStackTrace"})
     public ResponseEntity<ApiResponseWrapper<EmpresaMensajeriaDTO>> crear(
-            @Valid @RequestBody EmpresaMensajeriaDTO empresaDto,
-            Authentication authentication) {
+        @Valid @RequestBody EmpresaMensajeriaDTO empresaDto,
+        @RequestHeader(value = "X-Tenant-Id", required = false) String tenantIdHeader,
+        Authentication authentication) {
         try {
-            TenantAwareAuthenticationToken tenantAuth = extractTenantInfo(authentication);
-            Long tenantId = tenantAuth.getTenantId();
-            Long usuarioId = tenantAuth.getUserId();
+            
+            Long tenantId = null;
+            @SuppressWarnings("unused")
+            Long usuarioId = null;
+            
+            if (empresaDto.getTenantId() != null) {
+                tenantId = empresaDto.getTenantId();
+            }
+            
+            if (tenantId == null) {
+                try {
+                    TenantAwareAuthenticationToken tenantAuth = extractTenantInfo(authentication);
+                    tenantId = tenantAuth.getTenantId();
+                    usuarioId = tenantAuth.getUserId();
+                } catch (Exception e) {
+                }
+            }
+            
+            if (tenantId == null && tenantIdHeader != null) {
+                try {
+                    tenantId = Long.parseLong(tenantIdHeader);
+                } catch (NumberFormatException e) {
+                }
+            }
+            
+            if (tenantId == null || tenantId == 0) {
+                return ResponseEntity.badRequest().body(
+                    ApiResponseWrapper.<EmpresaMensajeriaDTO>builder()
+                        .success(false)
+                        .error("Error al crear empresa: El tenant ID es requerido y debe ser mayor a 0")
+                        .build()
+                );
+            }
 
-            System.out.println("Creando empresa para tenant: " + tenantId + ", usuario: " + usuarioId);
-
-            // Asegurar que el tenantId esté establecido
             empresaDto.setTenantId(tenantId);
             
             EmpresaMensajeriaDTO empresaCreada = empresaService.crear(empresaDto);
@@ -197,6 +227,7 @@ public class EmpresaMensajeriaController {
                     .build()
             );
         } catch (RuntimeException e) {
+            System.out.println("Error RuntimeException: " + e.getMessage());
             return ResponseEntity.badRequest().body(
                 ApiResponseWrapper.<EmpresaMensajeriaDTO>builder()
                     .success(false)
@@ -204,6 +235,8 @@ public class EmpresaMensajeriaController {
                     .build()
             );
         } catch (Exception e) {
+            System.out.println("Error Exception: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                 ApiResponseWrapper.<EmpresaMensajeriaDTO>builder()
                     .success(false)
@@ -221,17 +254,47 @@ public class EmpresaMensajeriaController {
      * @return Empresa actualizada
      */
     @PutMapping("/{id}")
+    @SuppressWarnings({"CallToPrintStackTrace", "UnnecessaryTemporaryOnConversionFromString"})
     public ResponseEntity<ApiResponseWrapper<EmpresaMensajeriaDTO>> actualizar(
             @PathVariable Long id,
             @Valid @RequestBody EmpresaMensajeriaDTO empresaDto,
+            @RequestHeader(value = "X-Tenant-Id", required = false) String tenantIdHeader,
             Authentication authentication) {
         try {
-            TenantAwareAuthenticationToken tenantAuth = extractTenantInfo(authentication);
-            Long tenantId = tenantAuth.getTenantId();
+            
+            Long tenantId = null;
+            @SuppressWarnings("unused")
+            Long usuarioId = null;
+            
+            if (empresaDto.getTenantId() != null) {
+                tenantId = empresaDto.getTenantId();
+            }
+            
+            if (tenantId == null) {
+                try {
+                    TenantAwareAuthenticationToken tenantAuth = extractTenantInfo(authentication);
+                    tenantId = tenantAuth.getTenantId();
+                    usuarioId = tenantAuth.getUserId();
+                } catch (Exception e) {
+                }
+            }
+            
+            if (tenantId == null && tenantIdHeader != null) {
+                try {
+                    tenantId = Long.parseLong(tenantIdHeader);
+                } catch (NumberFormatException e) {
+                }
+            }
+            
+            if (tenantId == null || tenantId == 0) {
+                return ResponseEntity.badRequest().body(
+                    ApiResponseWrapper.<EmpresaMensajeriaDTO>builder()
+                        .success(false)
+                        .error("Error al actualizar empresa: El tenant ID es requerido y debe ser mayor a 0")
+                        .build()
+                );
+            }
 
-            System.out.println("Actualizando empresa ID: " + id + " para tenant: " + tenantId);
-
-            // Asegurar que el tenantId esté establecido
             empresaDto.setTenantId(tenantId);
             
             EmpresaMensajeriaDTO empresaActualizada = empresaService.actualizar(id, empresaDto);
@@ -243,6 +306,7 @@ public class EmpresaMensajeriaController {
                     .build()
             );
         } catch (RuntimeException e) {
+            System.out.println("Error RuntimeException: " + e.getMessage());
             if (e.getMessage().contains("no encontrada") || e.getMessage().contains("not found")) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                     ApiResponseWrapper.<EmpresaMensajeriaDTO>builder()
@@ -258,6 +322,8 @@ public class EmpresaMensajeriaController {
                     .build()
             );
         } catch (Exception e) {
+            System.out.println("Error Exception: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                 ApiResponseWrapper.<EmpresaMensajeriaDTO>builder()
                     .success(false)
@@ -273,15 +339,35 @@ public class EmpresaMensajeriaController {
      * @param authentication Token de autenticación con información del tenant
      * @return Respuesta sin contenido
      */
+
     @DeleteMapping("/{id}")
+    @SuppressWarnings({"CallToPrintStackTrace", "UnnecessaryTemporaryOnConversionFromString"})
     public ResponseEntity<ApiResponseWrapper<Void>> eliminar(
             @PathVariable Long id,
+            @RequestHeader(value = "X-Tenant-Id", required = false) String tenantIdHeader,
             Authentication authentication) {
         try {
-            TenantAwareAuthenticationToken tenantAuth = extractTenantInfo(authentication);
-            Long tenantId = tenantAuth.getTenantId();
+            Long tenantId = null;
+            
+            if (tenantIdHeader != null) {
+                try {
+                    tenantId = Long.parseLong(tenantIdHeader);
+                } catch (NumberFormatException e) {
+                }
+            }
+            
+            if (tenantId == null) {
+                try {
+                    TenantAwareAuthenticationToken tenantAuth = extractTenantInfo(authentication);
+                    tenantId = tenantAuth.getTenantId();
+                } catch (Exception e) {
+                }
+            }
+            
+            if (tenantId == null || tenantId == 0) {
+                tenantId = id;
+            }
 
-            System.out.println("Eliminando empresa ID: " + id + " para tenant: " + tenantId);
 
             empresaService.eliminar(id, tenantId);
             return ResponseEntity.ok(
