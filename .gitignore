@@ -1,0 +1,62 @@
+# ======================== #
+# .env Rules #
+# ======================== #
+**/.env
+
+# ======================== #
+# mensajeriaFrontend Rules #
+# ======================== #
+# Logs
+mensajeriaFrontend/logs
+mensajeriaFrontend/*.log
+mensajeriaFrontend/npm-debug.log*
+mensajeriaFrontend/yarn-debug.log*
+mensajeriaFrontend/yarn-error.log*
+mensajeriaFrontend/pnpm-debug.log*
+mensajeriaFrontend/lerna-debug.log*
+
+# Build & Local Files
+mensajeriaFrontend/node_modules
+mensajeriaFrontend/dist
+mensajeriaFrontend/dist-ssr
+mensajeriaFrontend/*.local
+
+# Editor/IDE Files
+mensajeriaFrontend/.vscode/*
+!mensajeriaFrontend/.vscode/extensions.json
+mensajeriaFrontend/.idea
+mensajeriaFrontend/.DS_Store
+mensajeriaFrontend/*.suo
+mensajeriaFrontend/*.ntvs*
+mensajeriaFrontend/*.njsproj
+mensajeriaFrontend/*.sln
+mensajeriaFrontend/*.sw?
+
+# ======================== #
+# tenantsFrontend Rules    #
+# ======================== #
+# Logs
+tenantsFrontend/logs
+tenantsFrontend/*.log
+tenantsFrontend/npm-debug.log*
+tenantsFrontend/yarn-debug.log*
+tenantsFrontend/yarn-error.log*
+tenantsFrontend/pnpm-debug.log*
+tenantsFrontend/lerna-debug.log*
+
+# Build & Local Files
+tenantsFrontend/node_modules
+tenantsFrontend/dist
+tenantsFrontend/dist-ssr
+tenantsFrontend/*.local
+
+# Editor/IDE Files
+tenantsFrontend/.vscode/*
+!tenantsFrontend/.vscode/extensions.json
+tenantsFrontend/.idea
+tenantsFrontend/.DS_Store
+tenantsFrontend/*.suo
+tenantsFrontend/*.ntvs*
+tenantsFrontend/*.njsproj
+tenantsFrontend/*.sln
+tenantsFrontend/*.sw?

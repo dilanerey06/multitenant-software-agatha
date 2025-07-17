@@ -1,0 +1,150 @@
+version: '3.8'
+
+services:
+  # Base de datos para el schema "tenant"
+  mysql-tenant:
+    image: mysql:8.0.41
+    container_name: mysql-tenant
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: tenant
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - ./sql/schemaTenant.sql:/docker-entrypoint-initdb.d/tenant.sql:ro
+      - mysql-tenant-data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Base de datos para el schema "mensajeria"
+  mysql-mensajeria:
+    image: mysql:8.0.41
+    container_name: mysql-mensajeria
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: mensajeria
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - ./sql/schemaMensajeria.sql:/docker-entrypoint-initdb.d/mensajeria.sql:ro
+      - mysql-mensajeria-data:/var/lib/mysql
+    ports:
+      - "3308:3306"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Aplicación Tenant
+  tenant-app:
+    build:
+      context: ./servicios/tenant
+      dockerfile: Dockerfile
+    container_name: tenant-app
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-tenant:3306/tenant?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      COURIER_SERVICE_URL: http://courier-app:8081
+      SERVER_PORT: 8080
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql-tenant:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # Aplicación Courier
+  courier-app:
+    build:
+      context: ./servicios/mensajeriaa
+      dockerfile: Dockerfile
+    container_name: courier-app
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-mensajeria:3306/mensajeria?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      TENANT_SERVICE_URL: http://tenant-app:8080
+      SERVER_PORT: 8081
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
+    ports:
+      - "8081:8081"
+    depends_on:
+      mysql-mensajeria:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  middleware-service:
+    build:
+      context: ./servicios/middleware-service
+      dockerfile: Dockerfile
+    container_name: middleware-service
+    environment:
+      TENANT_SERVICE_URL: http://tenant-app:8080
+      COURIER_SERVICE_URL: http://courier-app:8081
+      PORT: 8082
+    ports:
+      - "8082:8082"
+    depends_on:
+      - tenant-app
+      - courier-app
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # Instance Frontend (React)
+  react-frontend-courier:
+    build:
+      context: ./mensajeriaFrontend
+      dockerfile: Dockerfile
+    container_name: react-frontend-courier
+    environment:
+      - NODE_ENV=production
+    ports:
+      - "3000:80"  # Solo exponemos el frontend
+    depends_on:
+      - courier-app
+      - tenant-app
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # Tenants Frontend (React)
+  react-frontend-tenants:
+    build:
+      context: ./tenantsFrontend
+      dockerfile: Dockerfile
+    container_name: react-frontend-tenants
+    environment:
+      - NODE_ENV=production
+    ports:
+      - "3001:80"  # Solo exponemos el frontend
+    depends_on:
+      - courier-app
+      - tenant-app
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql-tenant-data:
+  mysql-mensajeria-data:
