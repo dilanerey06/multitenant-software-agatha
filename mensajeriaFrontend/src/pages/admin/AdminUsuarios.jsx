@@ -803,6 +803,7 @@ export default function AdminUsuarios() {
                   className="btn btn-secondary"
                   onClick={handleCancelar}
                 >
+                  <i className="bi bi-x-circle me-1"></i>
                   Cancelar
                 </button>
               </div>

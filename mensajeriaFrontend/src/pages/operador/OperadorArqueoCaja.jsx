@@ -1372,6 +1372,7 @@ const handleSubmit = async () => {
                     className="btn btn-secondary" 
                     onClick={() => setShowModal(false)}
                   >
+                    <i className="bi bi-x-circle me-1"></i>
                     Cancelar
                   </button>
                 </div>

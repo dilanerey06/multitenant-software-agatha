@@ -346,7 +346,7 @@ export default function SuperUsuarios() {
                   <i className="bi bi-buildings me-1" style={{ color: '#ff6600' }}></i>
                   Empresa:
                 </div>
-                <div className="fw-semibold">{obtenerNombreEmpresa(usuario.mensajeriaId)}</div>
+                <div className="fw-semibold">{obtenerNombreEmpresa(usuario.mensajeriaId) || 'No se encontró'}</div>
               </div>
 
               <div className="mb-2 text-start">

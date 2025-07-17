@@ -1053,43 +1053,44 @@ INSERT IGNORE INTO tipo_ingreso_arqueo (nombre, descripcion, es_automatico) VALU
 ('PROPINA', 'Propinas de mensajeros', FALSE),
 ('OTROS_INGRESOS', 'Otros ingresos diversos', FALSE);
 
--- Insertar empresas de mensajeria
-INSERT INTO empresa_mensajeria (tenant_id, nombre, direccion, telefono, email, estado_id) VALUES
-(1, 'Mensajería Rápida S.A.S', 'Calle 45 #23-45, Bucaramanga', '3012345678', 'info@mensajerirapida.com', 1),
-(1, 'Express Delivery Ltda', 'Carrera 27 #34-12, Floridablanca', '3019876543', 'contacto@expressdelivery.com', 1),
-(2, 'Domicilios del Norte', 'Avenida Quebradaseca #15-30', '3156789012', 'ventas@domiciliosnorte.com', 1);
+-- Insertar empresas de mensajeria (empresa_id = tenant_id)
+INSERT IGNORE INTO empresa_mensajeria (tenant_id, nombre, direccion, telefono, email, estado_id) VALUES
+(1, 'Mensajería Rápida S.A.S', 'Calle 45 #23-45, Bucaramanga', '3012345678', 'contacto@mensajeriarapida.com', 1),
+(2, 'Express Delivery LTDA', 'Carrera 27 #34-12, Floridablanca', '3019876543', 'info@expressdelivery.com', 1),
+(3, 'Domicilios Norte', 'Avenida Quebradaseca #15-30', '3156789012', 'contacto@domiciliosnorte.com', 2),
+(4, 'MegaCourier S.A', 'Calle 50 #67-89, Bucaramanga', '3178901234', 'soporte@megacourier.com', 3),
+(5, 'Eco Envíos SAS', 'Carrera 35 #45-67, Floridablanca', '3165432109', 'admin@ecoenvios.com', 3);
 
--- Insertar usuarios
-INSERT INTO usuario (tenant_id, mensajeria_id, nombre_usuario, nombres, apellidos, email, password, rol_id, estado_id) VALUES
+-- Insertar usuarios (mensajeria_id = tenant_id)
+INSERT IGNORE INTO usuario (tenant_id, mensajeria_id, nombre_usuario, nombres, apellidos, email, password, rol_id, estado_id) VALUES
 -- Administradores
-(1, 1, 'admin1', 'Carlos Alberto', 'Rodríguez Pérez', 'admin@mensajerirapida.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 2, 1),
-(1, 2, 'admin2', 'María Fernanda', 'González López', 'admin@expressdelivery.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 2, 1),
-(2, 3, 'admin3', 'José Luis', 'Martínez Silva', 'admin@domiciliosnorte.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 2, 1),
+(1, 1, 'admin1', 'Carlos Alberto', 'Rodríguez Pérez', 'admin@mensajeriarapida.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 2, 1),
+(2, 2, 'admin2', 'María Fernanda', 'González López', 'admin@expressdelivery.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 2, 1),
+(3, 3, 'admin3', 'José Luis', 'Martínez Silva', 'admin@domiciliosnorte.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 2, 1),
 
 -- Operadores
-(1, 1, 'operador1', 'Ana Patricia', 'Vásquez Ruiz', 'operador1@mensajerirapida.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 4, 1),
-(1, 1, 'operador2', 'Diego Fernando', 'Morales Castro', 'operador2@mensajerirapida.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 4, 1),
-(1, 2, 'operador3', 'Lucía Andrea', 'Herrera Jiménez', 'operador1@expressdelivery.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 4, 1),
+(1, 1, 'operador1', 'Ana Patricia', 'Vásquez Ruiz', 'operador1@mensajeriarapida.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 4, 1),
+(1, 1, 'operador2', 'Diego Fernando', 'Morales Castro', 'operador2@mensajeriarapida.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 4, 1),
+(2, 2, 'operador3', 'Lucía Andrea', 'Herrera Jiménez', 'operador1@expressdelivery.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 4, 1),
 
 -- Mensajeros
-(1, 1, 'mensajero1', 'Juan Carlos', 'Ramírez Gómez', 'mensajero1@mensajerirapida.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 1),
-(1, 1, 'mensajero2', 'Pedro Luis', 'Sánchez Torres', 'mensajero2@mensajerirapida.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 1),
-(1, 1, 'mensajero3', 'Andrés Felipe', 'Vargas Medina', 'mensajero3@mensajerirapida.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 1),
-(1, 2, 'mensajero4', 'Miguel Ángel', 'Díaz Rojas', 'mensajero1@expressdelivery.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 1),
-(1, 2, 'mensajero5', 'Roberto Carlos', 'Pineda Uribe', 'mensajero2@expressdelivery.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 1),
-(2, 3, 'mensajero6', 'César Augusto', 'Mejía Cárdenas', 'mensajero1@domiciliosnorte.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 1);
-
+(1, 1, 'mensajero1', 'Juan Carlos', 'Ramírez Gómez', 'mensajero1@mensajeriarapida.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 1),
+(1, 1, 'mensajero2', 'Pedro Luis', 'Sánchez Torres', 'mensajero2@mensajeriarapida.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 1),
+(1, 1, 'mensajero3', 'Andrés Felipe', 'Vargas Medina', 'mensajero3@mensajeriarapida.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 1),
+(2, 2, 'mensajero4', 'Miguel Ángel', 'Díaz Rojas', 'mensajero1@expressdelivery.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 1),
+(2, 2, 'mensajero5', 'Roberto Carlos', 'Pineda Uribe', 'mensajero2@expressdelivery.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 1),
+(3, 3, 'mensajero6', 'César Augusto', 'Mejía Cárdenas', 'mensajero1@domiciliosnorte.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 1);
 
 -- Insertar direcciones
-INSERT INTO direccion (tenant_id, ciudad, barrio, direccion_completa, es_recogida, es_entrega, estado_id) VALUES
+INSERT IGNORE INTO direccion (tenant_id, ciudad, barrio, direccion_completa, es_recogida, es_entrega, estado_id) VALUES
 -- Direcciones de recogida
 (1, 'Bucaramanga', 'Centro', 'Carrera 33 #45-67', TRUE, FALSE, 1),
 (1, 'Bucaramanga', 'La Aurora', 'Calle 56 #23-45', TRUE, FALSE, 1),
 (1, 'Bucaramanga', 'Cabecera', 'Carrera 15 #78-90', TRUE, FALSE, 1),
 (1, 'Bucaramanga', 'Centro', 'Avenida Santander #12-34', TRUE, FALSE, 1),
-(1, 'Floridablanca', 'La Cumbre', 'Calle 42 #56-78', TRUE, FALSE, 1),
-(1, 'Floridablanca', 'Cañaveral', 'Carrera 27 #34-56', TRUE, FALSE, 1),
-(2, 'Bucaramanga', 'Norte', 'Calle 85 #12-45', TRUE, FALSE, 1),
+(2, 'Floridablanca', 'La Cumbre', 'Calle 42 #56-78', TRUE, FALSE, 1),
+(2, 'Floridablanca', 'Cañaveral', 'Carrera 27 #34-56', TRUE, FALSE, 1),
+(3, 'Bucaramanga', 'Norte', 'Calle 85 #12-45', TRUE, FALSE, 1),
 
 -- Direcciones de entrega
 (1, 'Bucaramanga', 'Álamos', 'Calle 12 #34-56, Apto 301', FALSE, TRUE, 1),
@@ -1097,21 +1098,21 @@ INSERT INTO direccion (tenant_id, ciudad, barrio, direccion_completa, es_recogid
 (1, 'Bucaramanga', 'Centro', 'Avenida Santander #123-45', FALSE, TRUE, 1),
 (1, 'Bucaramanga', 'Provenza', 'Calle 78 #90-12, Casa 15', FALSE, TRUE, 1),
 (1, 'Bucaramanga', 'Cabecera', 'Carrera 19 #23-45', FALSE, TRUE, 1),
-(1, 'Bucaramanga', 'Universidad', 'Calle Universidad #45-67', FALSE, TRUE, 1),
-(2, 'Bucaramanga', 'Real de Minas', 'Carrera 50 #78-90', FALSE, TRUE, 1);
+(2, 'Bucaramanga', 'Universidad', 'Calle Universidad #45-67', FALSE, TRUE, 1),
+(3, 'Bucaramanga', 'Real de Minas', 'Carrera 50 #78-90', FALSE, TRUE, 1);
 
--- Insertar clientes (CORREGIDO - removiendo campos que no existen)
-INSERT INTO cliente (tenant_id, mensajeria_id, nombre, telefono, frecuencia_pedidos, descuento_porcentaje, estado_id) VALUES
+-- Insertar clientes (mensajeria_id = tenant_id)
+INSERT IGNORE INTO cliente (tenant_id, mensajeria_id, nombre, telefono, frecuencia_pedidos, descuento_porcentaje, estado_id) VALUES
 (1, 1, 'Restaurante El Sabor', '3201234567', 45, 5.00, 1),
 (1, 1, 'Farmacia San Rafael', '3109876543', 32, 3.00, 1),
 (1, 1, 'Tienda Don Pepe', '3187654321', 28, 2.50, 1),
 (1, 1, 'Supermercado La Canasta', '3156789012', 67, 7.50, 1),
-(1, 2, 'Pastelería Dulce Hogar', '3143216789', 23, 2.00, 1),
-(1, 2, 'Librería El Conocimiento', '3198765432', 15, 1.50, 1),
-(2, 3, 'Pizzería Napolitana', '3165432109', 41, 4.00, 1);
+(2, 2, 'Pastelería Dulce Hogar', '3143216789', 23, 2.00, 1),
+(2, 2, 'Librería El Conocimiento', '3198765432', 15, 1.50, 1),
+(3, 3, 'Pizzería Napolitana', '3165432109', 41, 4.00, 1);
 
 -- Insertar relaciones cliente-direccion
-INSERT INTO cliente_direccion (cliente_id, direccion_id, es_predeterminada_recogida, es_predeterminada_entrega) VALUES
+INSERT IGNORE INTO cliente_direccion (cliente_id, direccion_id, es_predeterminada_recogida, es_predeterminada_entrega) VALUES
 (1, 1, TRUE, FALSE),  -- Restaurante El Sabor - dirección recogida
 (1, 8, FALSE, TRUE),  -- Restaurante El Sabor - dirección entrega predeterminada
 (2, 2, TRUE, FALSE),  -- Farmacia San Rafael
@@ -1127,9 +1128,9 @@ INSERT INTO cliente_direccion (cliente_id, direccion_id, es_predeterminada_recog
 (7, 7, TRUE, FALSE),  -- Pizzería Napolitana
 (7, 14, FALSE, TRUE);
 
--- Insertar tarifas
-INSERT INTO tarifa (tenant_id, mensajeria_id, nombre, valor_fijo, descripcion, activa) VALUES
--- Tarifas para Mensajería Rápida S.A.S
+-- Insertar tarifas (mensajeria_id = tenant_id)
+INSERT IGNORE INTO tarifa (tenant_id, mensajeria_id, nombre, valor_fijo, descripcion, activa) VALUES
+-- Tarifas para Mensajería Rápida S.A.S (tenant_id = 1)
 (1, 1, 'Express Zona 1', 8000.00, 'Entrega express en zona central', TRUE),
 (1, 1, 'Express Zona 2', 10000.00, 'Entrega express zona intermedia', TRUE),
 (1, 1, 'Express Zona 3', 12000.00, 'Entrega express zona lejana', TRUE),
@@ -1139,22 +1140,22 @@ INSERT INTO tarifa (tenant_id, mensajeria_id, nombre, valor_fijo, descripcion, a
 (1, 1, 'Documentos', 4000.00, 'Envío de documentos', TRUE),
 (1, 1, 'Medicamentos', 7000.00, 'Entrega de medicamentos', TRUE),
 
--- Tarifas para Express Delivery Ltda
-(1, 2, 'Express Premium', 9000.00, 'Servicio express premium', TRUE),
-(1, 2, 'Express Estándar', 7500.00, 'Servicio express estándar', TRUE),
-(1, 2, 'Normal Premium', 6000.00, 'Servicio normal premium', TRUE),
-(1, 2, 'Normal Estándar', 4500.00, 'Servicio normal estándar', TRUE),
-(1, 2, 'Compras Express', 12000.00, 'Compra y entrega express', TRUE),
-(1, 2, 'Compras Normal', 8500.00, 'Compra y entrega normal', TRUE),
+-- Tarifas para Express Delivery LTDA (tenant_id = 2)
+(2, 2, 'Express Premium', 9000.00, 'Servicio express premium', TRUE),
+(2, 2, 'Express Estándar', 7500.00, 'Servicio express estándar', TRUE),
+(2, 2, 'Normal Premium', 6000.00, 'Servicio normal premium', TRUE),
+(2, 2, 'Normal Estándar', 4500.00, 'Servicio normal estándar', TRUE),
+(2, 2, 'Compras Express', 12000.00, 'Compra y entrega express', TRUE),
+(2, 2, 'Compras Normal', 8500.00, 'Compra y entrega normal', TRUE),
 
--- Tarifas para Domicilios del Norte
-(2, 3, 'Express Norte', 8500.00, 'Entrega express zona norte', TRUE),
-(2, 3, 'Normal Norte', 5500.00, 'Entrega normal zona norte', TRUE),
-(2, 3, 'Especial Medicamentos', 7500.00, 'Entrega especializada medicamentos', TRUE),
-(2, 3, 'Compra Express Norte', 11000.00, 'Compra y entrega express norte', TRUE);
+-- Tarifas para Domicilios Norte (tenant_id = 3)
+(3, 3, 'Express Norte', 8500.00, 'Entrega express zona norte', TRUE),
+(3, 3, 'Normal Norte', 5500.00, 'Entrega normal zona norte', TRUE),
+(3, 3, 'Especial Medicamentos', 7500.00, 'Entrega especializada medicamentos', TRUE),
+(3, 3, 'Compra Express Norte', 11000.00, 'Compra y entrega express norte', TRUE);
 
--- Insertar pedidos de ejemplo
-INSERT INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, tipo_servicio_id, tarifa_id, 
+-- Insertar pedidos de ejemplo (mensajeria_id = tenant_id)
+INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, tipo_servicio_id, tarifa_id, 
                    direccion_recogida_id, direccion_entrega_id, telefono_recogida, telefono_entrega, 
                    tipo_paquete, peso_kg, valor_declarado, costo_compra, subtotal, total, estado_id, 
                    tiempo_entrega_minutos, notas) VALUES
@@ -1165,26 +1166,26 @@ INSERT INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, tipo_ser
 (1, 3, 1, 7, 1, 2, 3, 10, '3187654321', '3133456789', 'Productos varios', 3.20, 120000.00, 0.00, 10000.00, 10000.00, 2, NULL, 'Cliente prefiere entrega después de las 3 PM'),
 (1, 4, 1, NULL, 2, 5, 4, 11, '3156789012', '3144567890', 'Víveres', 5.80, 230000.00, 0.00, 6500.00, 6500.00, 1, NULL, 'Mercado semanal, manejar con cuidado'),
 
--- Pedidos para Express Delivery Ltda (tenant_id = 1, mensajeria_id = 2)
-(1, 5, 2, 10, 4, 13, 5, 12, '3143216789', '3155678901', 'Torta de cumpleaños', 2.00, 75000.00, 65000.00, 12000.00, 12000.00, 4, NULL, 'Compra realizada en Panadería Central'),
-(1, 6, 2, 11, 6, 12, 6, 13, '3198765432', '3166789012', 'Libros académicos', 1.20, 180000.00, 0.00, 4500.00, 4500.00, 3, 30, 'Material de estudio universitario'),
+-- Pedidos para Express Delivery LTDA (tenant_id = 2, mensajeria_id = 2)
+(2, 5, 2, 10, 4, 13, 5, 12, '3143216789', '3155678901', 'Torta de cumpleaños', 2.00, 75000.00, 65000.00, 12000.00, 12000.00, 4, NULL, 'Compra realizada en Panadería Central'),
+(2, 6, 2, 11, 6, 12, 6, 13, '3198765432', '3166789012', 'Libros académicos', 1.20, 180000.00, 0.00, 4500.00, 4500.00, 3, 30, 'Material de estudio universitario'),
 
--- Pedidos para Domicilios del Norte (tenant_id = 2, mensajeria_id = 3)
-(2, 7, 3, 12, 1, 17, 7, 14, '3165432109', '3177890123', 'Pizza familiar', 1.50, 42000.00, 0.00, 8500.00, 8500.00, 2, NULL, 'Pizza hawaiana, entregar caliente');
+-- Pedidos para Domicilios Norte (tenant_id = 3, mensajeria_id = 3)
+(3, 7, 3, 12, 1, 17, 7, 14, '3165432109', '3177890123', 'Pizza familiar', 1.50, 42000.00, 0.00, 8500.00, 8500.00, 2, NULL, 'Pizza hawaiana, entregar caliente');
 
 -- Pedidos sin cliente registrado (temporales)
-INSERT INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, tipo_servicio_id, tarifa_id, 
+INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, tipo_servicio_id, tarifa_id, 
 					direccion_recogida_id, direccion_entrega_id, direccion_recogida_temporal, direccion_entrega_temporal, 
 					ciudad_recogida, barrio_recogida, ciudad_entrega, barrio_entrega, telefono_recogida, telefono_entrega, 
 					tipo_paquete, peso_kg, valor_declarado, costo_compra, subtotal, total, estado_id, tiempo_entrega_minutos, notas) VALUES 
--- Pedido 1 sin cliente
+-- Pedido sin cliente para Mensajería Rápida S.A.S (tenant_id = 1)
 (1, NULL, 1, 9, 6, 7, NULL, NULL, 'Calle 40 #25-30, Oficina 201', 'Carrera 50 #60-40, Casa blanca',  'Bucaramanga', 'Centro', 'Bucaramanga', 'Provenza', '3201111111', '3202222222', 'Documentos legales', 0.20, 150000.00, 0.00, 4000.00, 4000.00, 4, NULL, 'Contratos importantes, manejar con cuidado'),
 
--- Pedido 2 sin cliente
-(1, NULL, 2, NULL, 8, 14, NULL, NULL, 'Centro Comercial La Quinta, Local 45', 'Avenida Los Estudiantes #78-90', 'Bucaramanga', 'Centro', 'Bucaramanga', 'Universidad', '3203333333', '3204444444', 'Comida china', 2.80, 35000.00, 28000.00, 8500.00, 8500.00, 1, NULL, 'Compra en restaurante Golden Dragon');
+-- Pedido sin cliente para Express Delivery LTDA (tenant_id = 2)
+(2, NULL, 2, NULL, 8, 14, NULL, NULL, 'Centro Comercial La Quinta, Local 45', 'Avenida Los Estudiantes #78-90', 'Bucaramanga', 'Centro', 'Bucaramanga', 'Universidad', '3203333333', '3204444444', 'Comida china', 2.80, 35000.00, 28000.00, 8500.00, 8500.00, 1, NULL, 'Compra en restaurante Golden Dragon');
 
 -- Insertar historial de pedidos
-INSERT INTO historial_pedido (pedido_id, tipo_cambio_id, valor_anterior, valor_nuevo, usuario_id) VALUES
+INSERT IGNORE INTO historial_pedido (pedido_id, tipo_cambio_id, valor_anterior, valor_nuevo, usuario_id) VALUES
 (1, 1, 'pendiente', 'asignado', 4),      -- operador1
 (1, 1, 'asignado', 'en_transito', 4),   -- operador1 
 (1, 1, 'en_transito', 'entregado', 4),  -- operador1
@@ -1203,23 +1204,23 @@ INSERT INTO historial_pedido (pedido_id, tipo_cambio_id, valor_anterior, valor_n
 (8, 1, 'asignado', 'en_transito', 5),   -- operador2 
 (8, 1, 'en_transito', 'entregado', 5);  -- operador2
 
--- Insertar arqueos de caja
-INSERT INTO arqueo_caja (tenant_id, mensajeria_id, usuario_id, fecha, turno_id, efectivo_inicio, egresos, efectivo_real, estado_id, observaciones) VALUES
--- Arqueos para Mensajería Rápida S.A.S
+-- Insertar arqueos de caja (mensajeria_id = tenant_id)
+INSERT IGNORE INTO arqueo_caja (tenant_id, mensajeria_id, usuario_id, fecha, turno_id, efectivo_inicio, egresos, efectivo_real, estado_id, observaciones) VALUES
+-- Arqueos para Mensajería Rápida S.A.S (tenant_id = 1)
 (1, 1, 4, '2024-12-20', 1, 50000.00, 5000.00, 68000.00, 2, 'Arqueo turno mañana - Sin diferencias'),
 (1, 1, 5, '2024-12-20', 2, 68000.00, 8000.00, 89500.00, 2, 'Arqueo turno tarde - Todo en orden'),
 (1, 1, 4, '2024-12-21', 1, 45000.00, 3000.00, 67000.00, 2, 'Arqueo turno mañana'),
 
--- Arqueos para Express Delivery Ltda
-(1, 2, 6, '2024-12-20', 1, 40000.00, 4000.00, 56500.00, 2, 'Arqueo matutino completo'),
-(1, 2, 6, '2024-12-20', 2, 56500.00, 6500.00, 78000.00, 3, 'Diferencia detectada en arqueo vespertino'),
+-- Arqueos para Express Delivery LTDA (tenant_id = 2)
+(2, 2, 6, '2024-12-20', 1, 40000.00, 4000.00, 56500.00, 2, 'Arqueo matutino completo'),
+(2, 2, 6, '2024-12-20', 2, 56500.00, 6500.00, 78000.00, 3, 'Diferencia detectada en arqueo vespertino'),
 
--- Arqueos para Domicilios del Norte
-(2, 3, 3, '2024-12-20', 1, 35000.00, 2500.00, 51000.00, 2, 'Primer arqueo del día - Normal'),
-(2, 3, 3, '2024-12-21', 1, 30000.00, 1500.00, 45500.00, 1, 'Arqueo en proceso');
+-- Arqueos para Domicilios Norte (tenant_id = 3)
+(3, 3, 3, '2024-12-20', 1, 35000.00, 2500.00, 51000.00, 2, 'Primer arqueo del día - Normal'),
+(3, 3, 3, '2024-12-21', 1, 30000.00, 1500.00, 45500.00, 1, 'Arqueo en proceso');
 
 -- Insertar ingresos de arqueo
-INSERT INTO ingreso_arqueo (arqueo_id, tipo_ingreso_id, pedido_id, monto, descripcion) VALUES
+INSERT IGNORE INTO ingreso_arqueo (arqueo_id, tipo_ingreso_id, pedido_id, monto, descripcion) VALUES
 -- Ingresos para arqueo 1 (Mensajería Rápida - 2024-12-20 mañana)
 (1, 1, 1, 8000.00, 'Ingreso automático por entrega pedido #1'),
 (1, 1, 2, 5000.00, 'Ingreso automático por entrega pedido #2'),
@@ -1244,34 +1245,34 @@ INSERT INTO ingreso_arqueo (arqueo_id, tipo_ingreso_id, pedido_id, monto, descri
 (5, 2, NULL, 8000.00, 'Pagos pendientes del día anterior'),
 (5, 3, NULL, 9500.00, 'Propinas y bonificaciones'),
 
--- Ingresos para arqueo 6 (Domicilios del Norte - 2024-12-20 mañana)
+-- Ingresos para arqueo 6 (Domicilios Norte - 2024-12-20 mañana)
 (6, 2, NULL, 18500.00, 'Ingresos varios del turno'),
 (6, 3, NULL, 5000.00, 'Propinas mensajeros'),
 
--- Ingresos para arqueo 7 (Domicilios del Norte - 2024-12-21 mañana - en proceso)
+-- Ingresos para arqueo 7 (Domicilios Norte - 2024-12-21 mañana - en proceso)
 (7, 2, NULL, 17000.00, 'Ingresos parciales del turno');
 
 -- Insertar notificaciones
-INSERT INTO notificacion (tenant_id, usuario_id, tipo_notificacion_id, titulo, mensaje, leida) VALUES
+INSERT IGNORE INTO notificacion (tenant_id, usuario_id, tipo_notificacion_id, titulo, mensaje, leida) VALUES
 -- Notificaciones para mensajeros
 (1, 7, 2, 'Nuevo pedido asignado', 'Se te ha asignado el pedido #1 - Restaurante El Sabor', TRUE),
 (1, 8, 2, 'Nuevo pedido asignado', 'Se te ha asignado el pedido #2 - Farmacia San Rafael', TRUE),
 (1, 7, 2, 'Nuevo pedido asignado', 'Se te ha asignado el pedido #3 - Tienda Don Pepe', FALSE),
-(1, 10, 2, 'Nuevo pedido asignado', 'Se te ha asignado el pedido #5 - Pastelería Dulce Hogar', TRUE),
-(1, 11, 2, 'Nuevo pedido asignado', 'Se te ha asignado el pedido #6 - Librería El Conocimiento', FALSE),
-(2, 12, 2, 'Nuevo pedido asignado', 'Se te ha asignado el pedido #7 - Pizzería Napolitana', FALSE),
+(2, 10, 2, 'Nuevo pedido asignado', 'Se te ha asignado el pedido #5 - Pastelería Dulce Hogar', TRUE),
+(2, 11, 2, 'Nuevo pedido asignado', 'Se te ha asignado el pedido #6 - Librería El Conocimiento', FALSE),
+(3, 12, 2, 'Nuevo pedido asignado', 'Se te ha asignado el pedido #7 - Pizzería Napolitana', FALSE),
 
 -- Notificaciones para operadores y admins
 (1, 4, 4, 'Pedido completado', 'El pedido #1 ha sido entregado exitosamente', TRUE),
 (1, 4, 4, 'Pedido completado', 'El pedido #2 ha sido entregado exitosamente', TRUE),
-(1, 6, 4, 'Pedido completado', 'El pedido #5 ha sido entregado exitosamente', FALSE),
-(1, 1, 1, 'Diferencia en arqueo', 'Se detectó diferencia en arqueo del 2024-12-20 turno tarde - Express Delivery', FALSE),
-(2, 3, 1, 'Arqueo pendiente', 'Recuerda cerrar el arqueo del turno actual', FALSE),
+(2, 6, 4, 'Pedido completado', 'El pedido #5 ha sido entregado exitosamente', FALSE),
+(2, 1, 1, 'Diferencia en arqueo', 'Se detectó diferencia en arqueo del 2024-12-20 turno tarde - Express Delivery', FALSE),
+(3, 3, 1, 'Arqueo pendiente', 'Recuerda cerrar el arqueo del turno actual', FALSE),
 
 -- Notificaciones de cambios en pedidos
 (1, 7, 3, 'Cambio en pedido', 'El pedido #3 ha sido modificado - revisar notas', FALSE),
 (1, 5, 3, 'Pedido reasignado', 'El pedido #4 requiere asignación de mensajero', FALSE),
-(2, 12, 3, 'Actualización pedido', 'El pedido #7 ha sido actualizado por el operador', FALSE);
+(3, 12, 3, 'Actualización pedido', 'El pedido #7 ha sido actualizado por el operador', FALSE);
 
 -- Actualizar algunos campos calculados y fechas
 UPDATE cliente SET 

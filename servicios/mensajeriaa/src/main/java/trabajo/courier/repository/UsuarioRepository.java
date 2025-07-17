@@ -52,4 +52,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     @Query("SELECT u FROM Usuario u JOIN u.rol r WHERE r.nombre = :nombreRol")
     List<Usuario> findAllByRolNombre(@Param("nombreRol") String nombreRol);
 
+    List<Usuario> findByMensajeriaId(Long mensajeriaId);
+
 }

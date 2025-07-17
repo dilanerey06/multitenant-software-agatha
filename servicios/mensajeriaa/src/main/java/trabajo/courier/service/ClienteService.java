@@ -101,67 +101,62 @@ public class ClienteService {
     }
 
    @Transactional
-public ClienteDTO crear(ClienteDTO clienteDTO, Long tenantId, Long mensajeriaId) {
-    // Validar unicidad del teléfono
-    if (clienteRepository.findByTenantIdAndMensajeriaIdAndTelefono(
-            tenantId, mensajeriaId, clienteDTO.getTelefono()).isPresent()) {
-        throw new RuntimeException("Ya existe un cliente con ese teléfono");
-    }
-
-    clienteDTO.setTenantId(tenantId);
-    clienteDTO.setMensajeriaId(mensajeriaId);
-    
-    Cliente cliente = clienteMapper.toEntity(clienteDTO);
-
-    // Procesar direcciones ANTES de guardar el cliente
-    if (cliente.getDirecciones() != null && !cliente.getDirecciones().isEmpty()) {
-        List<ClienteDireccion> direccionesProcesadas = new ArrayList<>();
+    public ClienteDTO crear(ClienteDTO clienteDTO, Long tenantId, Long mensajeriaId) {
         
-        for (ClienteDireccion clienteDireccion : cliente.getDirecciones()) {
-            Direccion direccion = clienteDireccion.getDireccion();
+        if (clienteRepository.findByTenantIdAndMensajeriaIdAndTelefono(
+                tenantId, mensajeriaId, clienteDTO.getTelefono()).isPresent()) {
+            throw new RuntimeException("Ya existe un cliente con ese teléfono");
+        }
+
+        clienteDTO.setTenantId(tenantId);
+        clienteDTO.setMensajeriaId(mensajeriaId);
+        
+        Cliente cliente = clienteMapper.toEntity(clienteDTO);
+
+        if (clienteDTO.getUltimoPedido() != null) {
+            cliente.setUltimoPedido(clienteDTO.getUltimoPedido());
+        }
+
+        if (cliente.getDirecciones() != null && !cliente.getDirecciones().isEmpty()) {
+            List<ClienteDireccion> direccionesProcesadas = new ArrayList<>();
             
-            if (direccion != null) {
-                // Configurar la dirección
-                direccion.setTenantId(tenantId);
+            for (ClienteDireccion clienteDireccion : cliente.getDirecciones()) {
+                Direccion direccion = clienteDireccion.getDireccion();
                 
-                // AQUÍ ESTÁ LA CORRECCIÓN: Establecer esRecogida y esEntrega basándose en las preferencias
-                direccion.setEsRecogida(clienteDireccion.getEsPredeterminadaRecogida() != null && 
-                                      clienteDireccion.getEsPredeterminadaRecogida());
-                direccion.setEsEntrega(clienteDireccion.getEsPredeterminadaEntrega() != null && 
-                                     clienteDireccion.getEsPredeterminadaEntrega());
-                
-                // Verificar estado
-                if (direccion.getEstado() == null || direccion.getEstado().getId() == null) {
-                    throw new RuntimeException("La dirección nueva no tiene estado asignado");
+                if (direccion != null) {
+                    direccion.setTenantId(tenantId);
+                    
+                    direccion.setEsRecogida(clienteDireccion.getEsPredeterminadaRecogida() != null && 
+                                        clienteDireccion.getEsPredeterminadaRecogida());
+                    direccion.setEsEntrega(clienteDireccion.getEsPredeterminadaEntrega() != null && 
+                                        clienteDireccion.getEsPredeterminadaEntrega());
+                    
+                    if (direccion.getEstado() == null || direccion.getEstado().getId() == null) {
+                        throw new RuntimeException("La dirección nueva no tiene estado asignado");
+                    }
+                    
+                    direccion = direccionRepository.save(direccion);
+                    
+                    ClienteDireccion nuevaClienteDireccion = new ClienteDireccion();
+                    nuevaClienteDireccion.setDireccion(direccion);
+                    nuevaClienteDireccion.setEsPredeterminadaRecogida(clienteDireccion.getEsPredeterminadaRecogida());
+                    nuevaClienteDireccion.setEsPredeterminadaEntrega(clienteDireccion.getEsPredeterminadaEntrega());
+                    
+                    direccionesProcesadas.add(nuevaClienteDireccion);
                 }
-                
-                // Guardar la dirección PRIMERO
-                direccion = direccionRepository.save(direccion);
-                
-                // Crear nueva ClienteDireccion
-                ClienteDireccion nuevaClienteDireccion = new ClienteDireccion();
-                nuevaClienteDireccion.setDireccion(direccion);
-                nuevaClienteDireccion.setEsPredeterminadaRecogida(clienteDireccion.getEsPredeterminadaRecogida());
-                nuevaClienteDireccion.setEsPredeterminadaEntrega(clienteDireccion.getEsPredeterminadaEntrega());
-                
-                direccionesProcesadas.add(nuevaClienteDireccion);
+            }
+            
+            cliente.getDirecciones().clear();
+            cliente.setDirecciones(direccionesProcesadas);
+            
+            for (ClienteDireccion cd : direccionesProcesadas) {
+                cd.setCliente(cliente);
             }
         }
-        
-        // Limpiar las direcciones originales y establecer las procesadas
-        cliente.getDirecciones().clear();
-        cliente.setDirecciones(direccionesProcesadas);
-        
-        // Establecer las relaciones bidireccionales
-        for (ClienteDireccion cd : direccionesProcesadas) {
-            cd.setCliente(cliente);
-        }
-    }
 
-    // Ahora guardar el cliente
-    cliente = clienteRepository.save(cliente);
-    return clienteMapper.toDTO(cliente);
-}
+        cliente = clienteRepository.save(cliente);
+        return clienteMapper.toDTO(cliente);
+    }
 
 @Transactional
 public ClienteDTO actualizar(Long id, ClienteDTO clienteDTO) {

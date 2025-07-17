@@ -10,9 +10,11 @@ import jakarta.transaction.Transactional;
 import trabajo.courier.DTO.EmpresaMensajeriaDTO;
 import trabajo.courier.entity.EmpresaMensajeria;
 import trabajo.courier.entity.EstadoGeneral;
+import trabajo.courier.entity.Usuario;
 import trabajo.courier.mapper.EmpresaMensajeriaMapper;
 import trabajo.courier.repository.EmpresaMensajeriaRepository;
 import trabajo.courier.repository.EstadoGeneralRepository;
+import trabajo.courier.repository.UsuarioRepository;
 
 @Service
 public class EmpresaMensajeriaService {
@@ -20,16 +22,19 @@ public class EmpresaMensajeriaService {
     private final EmpresaMensajeriaRepository empresaRepository;
     private final EmpresaMensajeriaMapper empresaMapper;
     private final EstadoGeneralRepository estadoRepository;
+    private final UsuarioRepository usuarioRepository;
 
     @Autowired
     public EmpresaMensajeriaService(
         EmpresaMensajeriaRepository empresaRepository,
         EmpresaMensajeriaMapper empresaMapper,
-        EstadoGeneralRepository estadoRepository
+        EstadoGeneralRepository estadoRepository,
+        UsuarioRepository usuarioRepository
     ) {
         this.empresaRepository = empresaRepository;
         this.empresaMapper = empresaMapper;
         this.estadoRepository = estadoRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     @Transactional
@@ -58,41 +63,48 @@ public class EmpresaMensajeriaService {
 
     @Transactional
     public EmpresaMensajeriaDTO crear(EmpresaMensajeriaDTO empresaDto) {
-        validarDatosEmpresa(empresaDto);
         
-        // Establecer valores por defecto para creación
-        empresaDto.setId(null); // Asegurar que es una nueva entidad
-        empresaDto.setFechaCreacion(LocalDateTime.now());
-        
-        // Si no se especifica estado, usar activo (1) por defecto
-        if (empresaDto.getEstadoId() == null) {
-            empresaDto.setEstadoId(1);
+        if (empresaDto.getTenantId() == null || empresaDto.getTenantId() == 0) {
+            throw new RuntimeException("El tenant ID es requerido");
         }
         
-        // Validar que el estado existe
-        validarEstado(empresaDto.getEstadoId());
+        validarDatosEmpresa(empresaDto);
         
+        empresaDto.setId(null); 
+        empresaDto.setFechaCreacion(LocalDateTime.now());
+        
+        if (empresaDto.getEstadoId() == null) {
+            empresaDto.setEstadoId(1);
+            System.out.println("Estado no especificado, usando default: 1 (ACTIVO)");
+        }
+        
+        validarEstado(empresaDto.getEstadoId());
         EmpresaMensajeria empresa = empresaMapper.toEntity(empresaDto);
         empresa = empresaRepository.save(empresa);
+        
         return empresaMapper.toDto(empresa);
     }
 
     @Transactional
     public EmpresaMensajeriaDTO actualizar(Long id, EmpresaMensajeriaDTO empresaDto) {
+        
         validarId(id);
+        
+        if (empresaDto.getTenantId() == null || empresaDto.getTenantId() == 0) {
+            throw new RuntimeException("El tenant ID es requerido y debe ser mayor a 0");
+        }
+        
         validarDatosEmpresa(empresaDto);
         
         EmpresaMensajeria empresa = empresaRepository.findByTenantIdAndId(empresaDto.getTenantId(), id)
-            .orElseThrow(() -> new RuntimeException("Empresa no encontrada con ID: " + id));
+            .orElseThrow(() -> new RuntimeException("Empresa no encontrada con ID: " + id + " para tenant: " + empresaDto.getTenantId()));
 
-        // Validar estado si se proporciona
         if (empresaDto.getEstadoId() != null) {
             validarEstado(empresaDto.getEstadoId());
         }
 
         empresaMapper.updateEntity(empresaDto, empresa);
         empresa = empresaRepository.save(empresa);
-
         return empresaMapper.toDto(empresa);
     }
 
@@ -104,9 +116,17 @@ public class EmpresaMensajeriaService {
         EmpresaMensajeria empresa = empresaRepository.findByTenantIdAndId(tenantId, id)
             .orElseThrow(() -> new RuntimeException("Empresa no encontrada con ID: " + id));
 
-        // Cambiar estado a inactivo usando la entidad EstadoGeneral
         EstadoGeneral estadoInactivo = estadoRepository.findById(2)
             .orElseThrow(() -> new RuntimeException("Estado inactivo no encontrado"));
+        
+        List<Usuario> usuariosAsociados = usuarioRepository.findByMensajeriaId(id);
+        if (!usuariosAsociados.isEmpty()) {
+            for (Usuario usuario : usuariosAsociados) {
+                usuario.setEstado(estadoInactivo);
+            }
+            usuarioRepository.saveAll(usuariosAsociados);
+
+        }
         
         empresa.setEstado(estadoInactivo);
         empresaRepository.save(empresa);
@@ -120,7 +140,6 @@ public class EmpresaMensajeriaService {
         EmpresaMensajeria empresa = empresaRepository.findByTenantIdAndId(tenantId, id)
             .orElseThrow(() -> new RuntimeException("Empresa no encontrada con ID: " + id));
 
-        // Cambiar estado a activo
         EstadoGeneral estadoActivo = estadoRepository.findById(1)
             .orElseThrow(() -> new RuntimeException("Estado activo no encontrado"));
         
@@ -128,7 +147,6 @@ public class EmpresaMensajeriaService {
         empresaRepository.save(empresa);
     }
 
-    // Métodos de validación privados
     private void validarTenantId(Long tenantId) {
         if (tenantId == null || tenantId <= 0) {
             throw new IllegalArgumentException("El tenant ID es requerido y debe ser mayor a 0");

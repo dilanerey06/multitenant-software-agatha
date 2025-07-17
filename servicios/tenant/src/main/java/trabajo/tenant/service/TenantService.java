@@ -19,7 +19,6 @@ import trabajo.tenant.DTO.TenantDTO;
 import trabajo.tenant.DTO.TenantInfoDTO;
 import trabajo.tenant.DTO.TenantUpdateDTO;
 import trabajo.tenant.DTO.ValidationResult;
-import trabajo.tenant.client.CourierServiceClient;
 import trabajo.tenant.entity.Estado;
 import trabajo.tenant.entity.Plan;
 import trabajo.tenant.entity.Tenant;
@@ -29,7 +28,6 @@ import trabajo.tenant.repository.EstadoRepository;
 import trabajo.tenant.repository.PlanRepository;
 import trabajo.tenant.repository.TenantInfoRepository;
 import trabajo.tenant.repository.TenantRepository;
-/*import trabajo.tenant.security.JwtTokenHolder;*/
 
 @Service
 @Transactional
@@ -52,9 +50,6 @@ public class TenantService {
 
     @Autowired
     private ValidationService validationService;
-
-    @Autowired
-    private CourierServiceClient courierServiceClient;
 
     @Transactional(readOnly = true)
     public List<TenantDTO> getAllTenants() {

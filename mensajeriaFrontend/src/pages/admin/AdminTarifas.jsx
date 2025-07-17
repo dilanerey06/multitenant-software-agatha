@@ -927,6 +927,7 @@ export default function AdminTarifas() {
                     className="btn btn-secondary"
                     disabled={submitting}
                   >
+                    <i className="bi bi-x-circle me-1"></i>
                     Cancelar
                   </button>
                 </div>
