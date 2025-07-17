@@ -76,14 +76,6 @@ async function makeRequestToCourier(config) {
   return courierResponse;
 }
 
-
-
-// "x-additional-data": {
-//   "mensajeriaId": 1, 
-//   "tenantdId": 1,
-//   "nombreUsuario": "adminTest",
-//   "rol": "ADMIN_MENSAJERIA"}
-
 // Proxy middleware para todas las rutas
 app.all('*', async (req, res) => {
   try {
