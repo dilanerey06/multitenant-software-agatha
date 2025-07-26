@@ -58,21 +58,21 @@ const tarifaService = {
   },
 
   toggleEstado: async (id, activa) => {
-    const response = await axios.patch(`${BASE_URL}/${id}/estado?activa=${activa}`, null, {
+    const response = await axios.patch(`${BASE_URL}/${id}/estado?activa=${activa}`, {}, {
       headers: tarifaService.getAuthHeaders()
     });
     return response.data;
   },
 
   activar: async (id) => {
-    const response = await axios.patch(`${BASE_URL}/${id}/activar`, null, {
+    const response = await axios.patch(`${BASE_URL}/${id}/activar`, {}, {
       headers: tarifaService.getAuthHeaders()
     });
     return response.data;
   },
 
   desactivar: async (id) => {
-    const response = await axios.patch(`${BASE_URL}/${id}/desactivar`, null, {
+    const response = await axios.patch(`${BASE_URL}/${id}/desactivar`, {}, {
       headers: tarifaService.getAuthHeaders()
     });
     return response.data;

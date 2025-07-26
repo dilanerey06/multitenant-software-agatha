@@ -365,7 +365,8 @@ export default function OperadorClientes() {
 
       const headers = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`,
+        'x-additional-data': additionalData 
       };
 
       let response;

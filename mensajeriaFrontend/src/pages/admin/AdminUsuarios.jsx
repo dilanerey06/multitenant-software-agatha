@@ -159,12 +159,6 @@ export default function AdminUsuarios() {
         ...prev,
         rolId: value ? '' : 'Debe seleccionar un rol'
       }));
-    } else if (name === 'estadoId') {
-      setEditingUsuario(prev => ({ ...prev, estadoId: Number(value) }));
-      setErrores(prev => ({
-        ...prev,
-        estadoId: value ? '' : 'Debe seleccionar un estado'
-      }));
     } else {
       setEditingUsuario(prev => ({ ...prev, [name]: value }));
       const errorCampo = validarCampo(name, value);
@@ -174,11 +168,15 @@ export default function AdminUsuarios() {
 
   const validarFormulario = () => {
     const erroresValidacion = {};
-    ['email', 'nombreUsuario', 'nombres', 'apellidos', 'rolId', 'estadoId'].forEach(campo => {
+    ['email', 'nombreUsuario', 'nombres', 'apellidos', 'rolId'].forEach(campo => {
       let valor = editingUsuario?.[campo];
       const error = validarCampo(campo, valor);
       if (error) erroresValidacion[campo] = error;
     });
+
+    if (!editingUsuario?.estadoId || editingUsuario.estadoId === '') {
+      setEditingUsuario(prev => ({ ...prev, estadoId: 1 }));
+    }
     setErrores(erroresValidacion);
     return Object.keys(erroresValidacion).length === 0;
   };
