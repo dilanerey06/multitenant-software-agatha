@@ -142,7 +142,7 @@ export default function OperadorNotificaciones() {
             mensaje: notif.mensaje,
             tipoNotificacion: {
               id: notif.tipoNotificacionId,
-              nombre: formatearNombreTipo(tipoReal.nombre || notif.tipoNotificacionNombre),
+              nombre: formatearNombre(tipoReal.nombre || notif.tipoNotificacionNombre),
               nombreOriginal: tipoReal.nombre || notif.tipoNotificacionNombre,
               icono: getIconoTipo(tipoReal.nombre || notif.tipoNotificacionNombre),
               color: getColorTipo(tipoReal.nombre || notif.tipoNotificacionNombre)
@@ -175,26 +175,6 @@ export default function OperadorNotificaciones() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatearNombreTipo = (nombre) => {
-    if (!nombre) return '';
-    
-    const nombresEspeciales = {
-      'alerta_arqueo': 'Alerta de arqueo',
-      'pedido_asignado': 'Pedido asignado',
-      'pedido_cambio': 'Cambio de pedido',
-      'pedido_completado': 'Pedido completado'
-    };
-    
-    if (nombresEspeciales[nombre.toLowerCase()]) {
-      return nombresEspeciales[nombre.toLowerCase()];
-    }
-    
-    return nombre
-      .toLowerCase()
-      .replace(/_/g, ' ')
-      .replace(/\b\w/g, letra => letra.toUpperCase());
   };
 
   const getIconoTipo = (tipo) => {
@@ -245,12 +225,18 @@ export default function OperadorNotificaciones() {
     });
   };
 
+  const formatearNombre = (nombre) => {
+    const frase = nombre.split('_').join(' ');
+    return frase.charAt(0).toUpperCase() + frase.slice(1).toLowerCase();
+  };
+
   const aplicarFiltros = () => {
     let filtradas = [...notificaciones];
 
     if (filtros.tipo) {
+      const tipoFormateado = formatearNombre(filtros.tipo);
       filtradas = filtradas.filter(n => 
-        n.tipoNotificacion.nombre === filtros.tipo
+        n.tipoNotificacion.nombre === tipoFormateado
       );
     }
 
@@ -439,8 +425,8 @@ export default function OperadorNotificaciones() {
                     }}
                   ></i>
                   <div>
-                    <h6 className="mb-0 fw-bold">{notificacion.titulo}</h6>
-                    <small className="text-muted">{notificacion.tipoNotificacion.nombre}</small>
+                    <h6 className="mb-0 fw-bold">{formatearNombre(notificacion.titulo)}</h6>
+                    <small className="text-muted">{formatearNombre(notificacion.tipoNotificacion.nombre)}</small>
                   </div>
                 </div>
                 
@@ -535,10 +521,10 @@ export default function OperadorNotificaciones() {
                     className={`${notificacion.tipoNotificacion.icono} me-2`}
                     style={{ fontSize: '1.2rem', color: notificacion.tipoNotificacion.color }}
                   ></i>
-                  <span>{notificacion.tipoNotificacion.nombre}</span>
+                  <span>{formatearNombre(notificacion.tipoNotificacion.nombre)}</span>
                 </div>
               </td>
-              <td className="fw-semibold">{notificacion.titulo}</td>
+              <td className="fw-semibold">{formatearNombre(notificacion.titulo)}</td>
               <td>
                 <small className="text-muted">{notificacion.mensaje.substring(0, 50)}...</small>
               </td>
@@ -704,7 +690,7 @@ export default function OperadorNotificaciones() {
                 <option value="" disabled hidden>Todos los tipos</option>
                 {tiposNotificacion.map(tipo => (
                   <option key={tipo.id} value={tipo.nombre}>
-                    {tipo.nombre}
+                    {formatearNombre(tipo.nombre)}
                   </option>
                 ))}
               </select>

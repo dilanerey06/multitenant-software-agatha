@@ -66,7 +66,8 @@ public class UsuarioService {
         usuario.setRol(rol);
 
         EstadoGeneral estado = new EstadoGeneral();
-        estado.setId(1); // Activo por defecto
+        Integer estadoIdRequest = request.getEstadoId();
+        estado.setId(estadoIdRequest != null ? estadoIdRequest : 1);
         usuario.setEstado(estado);
 
         String passwordTemporal = generarPasswordRandom(12);
