@@ -24,8 +24,6 @@ public class CrearUsuarioRequest {
     @NotNull(message = "El rol es obligatorio")
     private Integer rolId;
 
-    private Integer estadoId;
-
     public Long getMensajeriaId() { return mensajeriaId; }
     public void setMensajeriaId(Long mensajeriaId) { this.mensajeriaId = mensajeriaId; }
 
@@ -43,7 +41,4 @@ public class CrearUsuarioRequest {
 
     public Integer getRolId() { return rolId; }
     public void setRolId(Integer rolId) { this.rolId = rolId; }
-
-    public Integer getEstadoId() { return estadoId; }
-    public void setEstadoId(Integer estadoId) { this.estadoId = estadoId; }
 }
