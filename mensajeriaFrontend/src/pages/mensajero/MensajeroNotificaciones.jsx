@@ -23,43 +23,42 @@ export default function MensajeroNotificaciones() {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [empresaActual, setEmpresaActual] = useState(null);
 
+  const token = localStorage.getItem('token');
+  const additionalData = localStorage.getItem('x-additional-data');
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+    'x-additional-data': additionalData,
+  };
+
+  const decodeToken = (token) => {
+    try {
+      return JSON.parse(atob(token.split('.')[1]));
+    } catch (e) {
+      console.error("Token inválido", e);
+      return {};
+    }
+  };
+
+  const decoded = decodeToken(token);
+  const mensajeriaId = decoded?.mensajeria_id;
+  const usuarioId = decoded?.user_id;
+
   useEffect(() => {
-    const initializeComponent = async () => {
-  const token = getAuthToken();
-  if (!token) {
-    setError('No se encontró token de autenticación. Por favor, inicia sesión.');
-    setLoading(false);
-    return;
-  }
+    if (usuarioId) {
+      setCurrentUserId(usuarioId);
+      cargarDatos();
+    } else {
+      setError('No se pudo obtener el ID de usuario del token');
+      setLoading(false);
+    }
+  }, []);
 
-  if (!isTokenValid(token)) {
-    setError('Token de autenticación expirado. Por favor, inicia sesión nuevamente.');
-    setLoading(false);
-    return;
-  }
-
-  const { userId, mensajeriaId } = getUserIdFromToken();
-  if (!userId) {
-    setError('No se pudo obtener el ID de usuario del token. Por favor, inicia sesión nuevamente.');
-    setLoading(false);
-    return;
-  }
-
-  setCurrentUserId(userId);
-  
-  await cargarDatos(userId, mensajeriaId);
-};
-
-    initializeComponent();
-  }, []); 
-
-  
-useEffect(() => {
-  if (currentUserId !== null && currentPage > 0) {
-    const { mensajeriaId } = getUserIdFromToken();
-    cargarDatos(currentUserId, mensajeriaId);
-  }
-}, [currentPage]);
+  useEffect(() => {
+    if (currentUserId && currentPage > 0) {
+      cargarDatos();
+    }
+  }, [currentPage]);
 
   useEffect(() => {
     if (notificaciones.length > 0) {
@@ -67,216 +66,115 @@ useEffect(() => {
     }
   }, [filtros, notificaciones]);
 
-const getUserIdFromToken = () => {
-  const token = getAuthToken();
-  if (!token) return { userId: null, mensajeriaId: null };
+  const cargarDatos = async () => {
+    setLoading(true);
+    setError(null);
 
-  try {
-    const payloadBase64 = token.split('.')[1];
-    const payload = JSON.parse(atob(payloadBase64));
-
-    const userId = payload.user_id || payload.id || payload.usuarioId || payload.sub;
-    const mensajeriaId = payload.mensajeriaId || payload.empresa_id || payload.mensajeria_id;
-    
-    return { userId, mensajeriaId };
-    
-  } catch (error) {
-    console.error('❌ Error al decodificar token JWT:', error);
-    return { userId: null, mensajeriaId: null };
-  }
-};
-
-
-  const getAuthToken = () => {
-    const token = localStorage.getItem('authToken') || 
-                  localStorage.getItem('token') || 
-                  sessionStorage.getItem('authToken') || 
-                  sessionStorage.getItem('token');
-    
-    return token;
-  };
-
-
-  const isTokenValid = (token) => {
-    if (!token) return false;
-    
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const currentTime = Math.floor(Date.now() / 1000);
-      return payload.exp > currentTime;
-    } catch (error) {
-      return true;
+    if (!usuarioId) {
+      console.error('Usuario ID no disponible');
+      setError('Usuario ID no disponible');
+      setLoading(false);
+      return;
     }
-  };
 
-  const createAxiosInstance = () => {
-    
-    const instance = axios.create({
-      baseURL: '/proxy',
-      timeout: 10000, 
-    });
-
-    instance.interceptors.request.use(
-      (config) => {
-        const currentToken = getAuthToken();
-        if (currentToken && isTokenValid(currentToken)) {
-          config.headers.Authorization = `Bearer ${currentToken}`;
-        }
-
-        const additionalData = getAdditionalData();
-        if (additionalData) {
-          config.headers['x-additional-data'] = additionalData;
-        }
-
-        return config;
-      },
-      (error) => {
-        console.error('Request Error:', error);
-        return Promise.reject(error);
-      }
-    );
-
-    instance.interceptors.response.use(
-      (response) => {
-        return response;
-      },
-      (error) => {
-        console.error('❌ Response Error:', error.response?.status, error.response?.data);
-        
-        if (error.response?.status === 401) {
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('token');
-          sessionStorage.removeItem('authToken');
-          sessionStorage.removeItem('token');
-          
-        }
-        
-        return Promise.reject(error);
-      }
-    );
-
-    return instance;
-  };
-
-  const cargarDatos = async (userId = currentUserId, mensajeriaId = null) => {
     try {
-      setLoading(true);
-      setError(null);
-
-      if (!userId) {
-        throw new Error('No se pudo obtener el ID de usuario');
-      }
-
-      const token = getAuthToken();
-      if (!token) {
-        throw new Error('No hay token de autenticación');
-      }
-
-      const apiClient = createAxiosInstance();
-
-      if (!mensajeriaId) {
-        const tokenData = getUserIdFromToken();
-        mensajeriaId = tokenData.mensajeriaId;
-      }
-
-      const requests = [
-        apiClient.get(`/api/notificaciones/usuario/${userId}`, {
+      
+      const [
+        notificacionesResponse,
+        tiposNotificacionResponse,
+        usuariosResponse
+      ] = await Promise.all([
+        axios.get(`/proxy/api/notificaciones/usuario/${usuarioId}`, {
+          headers,
           params: {
             page: currentPage,
             size: pageSize,
             sort: 'fechaCreacion,desc'
           }
         }),
-        apiClient.get('/api/tipos-notificacion'),
-        apiClient.get('/api/usuarios')
-      ];
+        axios.get('/proxy/api/tipos-notificacion', { headers }),
+        axios.get('/proxy/api/usuarios', { headers })
+      ]);
 
-      if (mensajeriaId) {
-        requests.push(apiClient.get(`/api/empresas-mensajeria/${mensajeriaId}`));
+      const procesar = (res, setter, nombre) => {
+        if (res.data?.success) {
+          const datos = res.data.data;
+          if (Array.isArray(datos?.content)) {
+            setter(datos.content);
+            return datos;
+          } else if (Array.isArray(datos)) {
+            setter(datos);
+            return datos;
+          } else if (datos && typeof datos === 'object') {
+            // Si es un objeto con paginación
+            const content = datos.content || [];
+            setter(content);
+            return datos;
+          } else {
+            console.error(`Formato inválido en ${nombre}:`, datos);
+            setter([]);
+            return null;
+          }
+        } else {
+          console.error(`Error en ${nombre}:`, res.data?.error || 'Respuesta inválida');
+          setter([]);
+          return null;
+        }
+      };
+
+      // Procesar respuestas
+      const notificacionesData = procesar(notificacionesResponse, () => {}, 'notificaciones');
+      const tiposData = procesar(tiposNotificacionResponse, setTiposNotificacion, 'tipos de notificación');
+      const usuariosData = procesar(usuariosResponse, setUsuarios, 'usuarios');
+
+      if (notificacionesData) {
+        const notificacionesContent = notificacionesData.content || notificacionesData || [];
+        
+
+        // Transformar notificaciones
+        const notificacionesTransformadas = notificacionesContent.map(notif => {
+          const usuarioReal = usuariosData?.find(u => u.id === notif.usuarioId) || {};
+          const tipoReal = tiposData?.find(t => t.id === notif.tipoNotificacionId) || {};
+
+          return {
+            id: notif.id,
+            titulo: notif.titulo,
+            mensaje: notif.mensaje,
+            tipoNotificacion: {
+              id: notif.tipoNotificacionId,
+              nombre: formatearNombre(tipoReal.nombre || notif.tipoNotificacionNombre),
+              nombreOriginal: tipoReal.nombre || notif.tipoNotificacionNombre,
+              icono: getIconoTipo(tipoReal.nombre || notif.tipoNotificacionNombre),
+              color: getColorTipo(tipoReal.nombre || notif.tipoNotificacionNombre)
+            },
+            usuario: {
+              id: notif.usuarioId,
+              nombreUsuario: usuarioReal.nombreUsuario || `usuario_${notif.usuarioId}`,
+              nombres: `${usuarioReal.nombres || 'Usuario'} ${usuarioReal.apellidos || ''}`.trim()
+            },
+            leida: notif.leida,
+            fechaCreacion: notif.fechaCreacion,
+            fechaLectura: notif.fechaLectura || null
+          };
+        });
+
+
+        setNotificaciones(notificacionesTransformadas);
+        setNotificacionesFiltradas(notificacionesTransformadas);
+        setTotalPages(notificacionesData.totalPages || 1);
+        setTotalElements(notificacionesData.totalElements || notificacionesTransformadas.length);
       }
 
-      const responses = await Promise.all(requests);
-      const [notificacionesResponse, tiposResponse, usuariosResponse, empresaResponse] = responses;
-
-      if (empresaResponse && empresaResponse.data) {
-        const empresaData = empresaResponse.data.data || empresaResponse.data;
-        setEmpresaActual(empresaData);
-      }
-
-      const notificacionesData = notificacionesResponse.data.data || notificacionesResponse.data || {};
-      const notificacionesContent = notificacionesData.content || notificacionesData || [];
-
-      const usuariosData = usuariosResponse.data.data || usuariosResponse.data || [];
-
-      const notificacionesTransformadas = notificacionesContent.map(notif => {
-        const usuarioReal = usuariosData.find(u => u.id === notif.usuarioId) || {};
-
-        return {
-          id: notif.id,
-          titulo: notif.titulo,
-          mensaje: notif.mensaje,
-          tipoNotificacion: {
-            id: notif.tipoNotificacionId,
-            nombre: formatearNombreTipo(notif.tipoNotificacionNombre),
-            nombreOriginal: notif.tipoNotificacionNombre,
-            icono: getIconoTipo(notif.tipoNotificacionNombre),
-            color: getColorTipo(notif.tipoNotificacionNombre)
-          },
-          usuario: {
-            id: notif.usuarioId,
-            nombreUsuario: usuarioReal.nombreUsuario || `usuario_${notif.usuarioId}`,
-            nombres: `${usuarioReal.nombres || 'Usuario'} ${usuarioReal.apellidos || ''}`.trim()
-          },
-          leida: notif.leida,
-          fechaCreacion: notif.fechaCreacion,
-          fechaLectura: notif.fechaLectura || null
-        };
-      });
-
-      setNotificaciones(notificacionesTransformadas);
-      setNotificacionesFiltradas(notificacionesTransformadas);
-      setTotalPages(notificacionesData.totalPages || 1);
-      setTotalElements(notificacionesData.totalElements || notificacionesTransformadas.length);
-
-      const tiposData = tiposResponse.data.data || tiposResponse.data || [];
-
-      const tiposTransformados = tiposData.map(tipo => ({
-        id: tipo.id,
-        nombre: formatearNombreTipo(tipo.nombre),
-        nombreOriginal: tipo.nombre,
-        descripcion: tipo.descripcion || '',
-        icono: getIconoTipo(tipo.nombre),
-        color: getColorTipo(tipo.nombre)
-      }));
-
-      setTiposNotificacion(tiposTransformados);
-      setUsuarios(usuariosData);
-
-    } catch (err) {
+    } catch (error) {
+      console.error('❌ Error al cargar notificaciones:', error);
+      console.error('Detalles del error:', error.response?.data);
+      setError(`Error al cargar las notificaciones: ${error.message}`);
+      setNotificaciones([]);
+      setTiposNotificacion([]);
+      setUsuarios([]);
     } finally {
       setLoading(false);
     }
-  };
-
-
-  const formatearNombreTipo = (nombre) => {
-    if (!nombre) return '';
-    
-    const nombresEspeciales = {
-      'alerta_arqueo': 'Alerta de arqueo',
-      'pedido_asignado': 'Pedido asignado',
-      'pedido_cambio': 'Cambio de pedido',
-      'pedido_completado': 'Pedido completado'
-    };
-    
-    if (nombresEspeciales[nombre.toLowerCase()]) {
-      return nombresEspeciales[nombre.toLowerCase()];
-    }
-    
-    return nombre
-      .toLowerCase()
-      .replace(/_/g, ' ')
-      .replace(/\b\w/g, letra => letra.toUpperCase());
   };
 
   const getIconoTipo = (tipo) => {
@@ -327,12 +225,18 @@ const getUserIdFromToken = () => {
     });
   };
 
+  const formatearNombre = (nombre) => {
+    const frase = nombre.split('_').join(' ');
+    return frase.charAt(0).toUpperCase() + frase.slice(1).toLowerCase();
+  };
+
   const aplicarFiltros = () => {
     let filtradas = [...notificaciones];
 
     if (filtros.tipo) {
+      const tipoFormateado = formatearNombre(filtros.tipo);
       filtradas = filtradas.filter(n => 
-        n.tipoNotificacion.nombre.toLowerCase().includes(filtros.tipo.toLowerCase())
+        n.tipoNotificacion.nombre === tipoFormateado
       );
     }
 
@@ -383,14 +287,12 @@ const getUserIdFromToken = () => {
     });
   };
 
- const marcarComoLeida = async (notificacionId, usuarioId) => {
+ const marcarComoLeida = async (notificacionId) => {
     try {
-      
-      const apiClient = createAxiosInstance();
-      const response = await apiClient.put('/api/notificaciones/marcar-leida', {
+      const response = await axios.put('/proxy/api/notificaciones/marcar-leida', {
         notificacionId,
         usuarioId
-      });
+      }, { headers });
 
       setNotificaciones(prev => 
         prev.map(n => 
@@ -400,19 +302,26 @@ const getUserIdFromToken = () => {
         )
       );
 
-    } catch (err) {
-      console.error('❌ Error al marcar como leída:', err);
-      setError(`Error al marcar la notificación como leída: ${err.response?.data?.mensaje || err.message}`);
+      // Actualizar también las notificaciones filtradas
+      setNotificacionesFiltradas(prev => 
+        prev.map(n => 
+          n.id === notificacionId 
+            ? { ...n, leida: true, fechaLectura: new Date().toISOString() }
+            : n
+        )
+      );
+
+    } catch (error) {
+      console.error('❌ Error al marcar como leída:', error);
+      console.error('Detalles del error:', error.response?.data);
+      setError(`Error al marcar la notificación como leída: ${error.response?.data?.mensaje || error.message}`);
     }
   };
-
 
   const marcarTodasComoLeidas = async () => {
     try {
       
-      const apiClient = createAxiosInstance();
-      const response = await apiClient.put(`/api/notificaciones/usuario/${currentUserId}/marcar-todas-leidas`);
-      
+      const response = await axios.put(`/proxy/api/notificaciones/usuario/${usuarioId}/marcar-todas-leidas`, {}, { headers });
 
       setNotificaciones(prev => 
         prev.map(n => ({ 
@@ -422,20 +331,30 @@ const getUserIdFromToken = () => {
         }))
       );
 
-    } catch (err) {
-      console.error('❌ Error al marcar todas como leídas:', err);
-      setError(`Error al marcar todas las notificaciones como leídas: ${err.response?.data?.mensaje || err.message}`);
+      setNotificacionesFiltradas(prev => 
+        prev.map(n => ({ 
+          ...n, 
+          leida: true, 
+          fechaLectura: n.fechaLectura || new Date().toISOString() 
+        }))
+      );
+
+    } catch (error) {
+      console.error('❌ Error al marcar todas como leídas:', error);
+      console.error('Detalles del error:', error.response?.data);
+      setError(`Error al marcar todas las notificaciones como leídas: ${error.response?.data?.mensaje || error.message}`);
     }
   };
 
   const contarNoLeidas = async () => {
     try {
-      const apiClient = createAxiosInstance();
-      const response = await apiClient.get(`/api/notificaciones/usuario/${currentUserId}/contar-no-leidas`);
-      return response.data.data || 0;
-    } catch (err) {
-      console.error('Error al contar no leídas:', err);
-      return notificaciones.filter(n => !n.leida).length;
+      
+      const response = await axios.get(`/proxy/api/notificaciones/usuario/${usuarioId}/contar-no-leidas`, { headers });
+      
+      return response.data?.data || response.data?.count || 0;
+    } catch (error) {
+      console.error('❌ Error al contar no leídas desde servidor:', error);
+      return contarNoLeidas();
     }
   };
 
@@ -506,8 +425,8 @@ const getUserIdFromToken = () => {
                     }}
                   ></i>
                   <div>
-                    <h6 className="mb-0 fw-bold">{notificacion.titulo}</h6>
-                    <small className="text-muted">{notificacion.tipoNotificacion.nombre}</small>
+                    <h6 className="mb-0 fw-bold">{formatearNombre(notificacion.titulo)}</h6>
+                    <small className="text-muted">{formatearNombre(notificacion.tipoNotificacion.nombre)}</small>
                   </div>
                 </div>
                 
@@ -602,10 +521,10 @@ const getUserIdFromToken = () => {
                     className={`${notificacion.tipoNotificacion.icono} me-2`}
                     style={{ fontSize: '1.2rem', color: notificacion.tipoNotificacion.color }}
                   ></i>
-                  <span>{notificacion.tipoNotificacion.nombre}</span>
+                  <span>{formatearNombre(notificacion.tipoNotificacion.nombre)}</span>
                 </div>
               </td>
-              <td className="fw-semibold">{notificacion.titulo}</td>
+              <td className="fw-semibold">{formatearNombre(notificacion.titulo)}</td>
               <td>
                 <small className="text-muted">{notificacion.mensaje.substring(0, 50)}...</small>
               </td>
@@ -771,7 +690,7 @@ const getUserIdFromToken = () => {
                 <option value="" disabled hidden>Todos los tipos</option>
                 {tiposNotificacion.map(tipo => (
                   <option key={tipo.id} value={tipo.nombre}>
-                    {tipo.nombre}
+                    {formatearNombre(tipo.nombre)}
                   </option>
                 ))}
               </select>

@@ -130,7 +130,7 @@ const [showPedidosModal, setShowPedidosModal] = useState(false);
         axios.get('/proxy/api/mensajeros', { headers }),
         axios.get('/proxy/api/tipos-servicio', { headers }),
         axios.get('/proxy/api/tarifas', { headers }),
-        axios.get('/proxy/proxy/api/direcciones', { headers }),
+        axios.get('/proxy/api/direcciones', { headers }),
         axios.get('/proxy/api/estados-pedido', { headers }),
         axios.get('/proxy/api/historial-pedidos', { headers }),
         axios.get('/proxy/api/tipos-cambio-pedido', { headers })

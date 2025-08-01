@@ -76,6 +76,37 @@ async function makeRequestToCourier(config) {
   return courierResponse;
 }
 
+// Función para detectar si la respuesta es un archivo binario
+function isBinaryResponse(headers) {
+  const contentType = headers['content-type'] || '';
+  const binaryTypes = [
+    'application/pdf',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-excel',
+    'application/octet-stream',
+    'image/',
+    'video/',
+    'audio/'
+  ];
+  
+  return binaryTypes.some(type => contentType.toLowerCase().includes(type.toLowerCase()));
+}
+
+async function makeRequestToCourier(config, isBinary = false) {
+  // Solo usar stream para archivos binarios
+  const courierResponse = await axios({
+    ...config,
+    responseType: isBinary ? 'stream' : 'json'
+  });
+  return courierResponse;
+}
+
+// "x-additional-data": {
+//   "mensajeriaId": 1, 
+//   "tenantdId": 1,
+//   "nombreUsuario": "adminTest",
+//   "rol": "ADMIN_MENSAJERIA"}
+
 // Proxy middleware para todas las rutas
 app.all('*', async (req, res) => {
   try {
@@ -130,8 +161,35 @@ app.all('*', async (req, res) => {
         }
       }
 
-      const courierResponseN = await makeRequestToCourier(config);
-      res.status(courierResponseN.status).json(courierResponseN.data);
+      const courierResponse = await makeRequestToCourier(config);
+
+      if (isBinaryResponse(courierResponse.headers)) {
+        // Para archivos binarios, hacer una nueva petición con stream
+        const binaryResponse = await makeRequestToCourier(config, true);
+        
+        res.status(binaryResponse.status);
+        
+        // Copiar headers importantes
+        const importantHeaders = [
+          'content-type',
+          'content-disposition',
+          'content-length',
+          'cache-control'
+        ];
+        
+        importantHeaders.forEach(header => {
+          if (binaryResponse.headers[header]) {
+            res.set(header, binaryResponse.headers[header]);
+          }
+        });
+        
+        // Pipe la respuesta directamente (mantiene integridad binaria)
+        binaryResponse.data.pipe(res);
+      } else {
+        // Para respuestas JSON normales
+        res.status(courierResponse.status).json(courierResponse.data);
+      }
+
     } else {
       console.log("************************ PETICION SUPERADMIN -> NO VALIDA CON TENANT SERVICE ***********************************");
 
@@ -147,10 +205,32 @@ app.all('*', async (req, res) => {
           return status < 500; // Resolver solo si el status es menor a 500
         }
       }
-      const courierResponseN = await makeRequestToCourier(config);
-      res.status(courierResponseN.status).json(courierResponseN.data);
-    }
+      const courierResponse = await makeRequestToCourier(config);
 
+       if (isBinaryResponse(courierResponse.headers)) {
+        // Para archivos binarios, hacer una nueva petición con stream
+        const binaryResponse = await makeRequestToCourier(config, true);
+        
+        res.status(binaryResponse.status);
+        
+        const importantHeaders = [
+          'content-type',
+          'content-disposition',
+          'content-length',
+          'cache-control'
+        ];
+        
+        importantHeaders.forEach(header => {
+          if (binaryResponse.headers[header]) {
+            res.set(header, binaryResponse.headers[header]);
+          }
+        });
+        
+        binaryResponse.data.pipe(res);
+      } else {
+        res.status(courierResponse.status).json(courierResponse.data);
+      }
+    }
     
   } catch (error) {
     console.error('Error en proxy middleware:', error.message);

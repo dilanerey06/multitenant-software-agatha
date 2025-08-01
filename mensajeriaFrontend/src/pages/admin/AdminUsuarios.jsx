@@ -122,7 +122,7 @@ export default function AdminUsuarios() {
 
   const validarCampo = (name, value) => {
     let error = '';
-    if (!value || !value.toString().trim()) {
+    if (name !== 'estadoId' && (!value || !value.toString().trim())) {
       error = 'Este campo es obligatorio';
     } else {
       if (name === 'email') {
@@ -159,12 +159,6 @@ export default function AdminUsuarios() {
         ...prev,
         rolId: value ? '' : 'Debe seleccionar un rol'
       }));
-    } else if (name === 'estadoId') {
-      setEditingUsuario(prev => ({ ...prev, estadoId: Number(value) }));
-      setErrores(prev => ({
-        ...prev,
-        estadoId: value ? '' : 'Debe seleccionar un estado'
-      }));
     } else {
       setEditingUsuario(prev => ({ ...prev, [name]: value }));
       const errorCampo = validarCampo(name, value);
@@ -174,11 +168,12 @@ export default function AdminUsuarios() {
 
   const validarFormulario = () => {
     const erroresValidacion = {};
-    ['email', 'nombreUsuario', 'nombres', 'apellidos', 'rolId', 'estadoId'].forEach(campo => {
+    ['email', 'nombreUsuario', 'nombres', 'apellidos', 'rolId'].forEach(campo => {
       let valor = editingUsuario?.[campo];
       const error = validarCampo(campo, valor);
       if (error) erroresValidacion[campo] = error;
     });
+
     setErrores(erroresValidacion);
     return Object.keys(erroresValidacion).length === 0;
   };
