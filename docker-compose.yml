@@ -10,6 +10,7 @@ services:
       MYSQL_DATABASE: tenant
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-time-zone='+00:00'
     volumes:
       - ./sql/schemaTenant.sql:/docker-entrypoint-initdb.d/tenant.sql:ro
       - mysql-tenant-data:/var/lib/mysql
@@ -31,6 +32,7 @@ services:
       MYSQL_DATABASE: mensajeria
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-time-zone='+00:00'
     volumes:
       - ./sql/schemaMensajeria.sql:/docker-entrypoint-initdb.d/mensajeria.sql:ro
       - mysql-mensajeria-data:/var/lib/mysql
@@ -50,13 +52,16 @@ services:
       dockerfile: Dockerfile
     container_name: tenant-app
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-tenant:3306/tenant?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-tenant:3306/tenant?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8&useUnicode=true&connectionCollation=utf8mb4_unicode_ci
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
       COURIER_SERVICE_URL: http://courier-app:8081
       SERVER_PORT: 8080
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
+      SPRING_JPA_PROPERTIES_HIBERNATE_CONNECTION_CHARSET: utf8mb4
+      SPRING_JPA_PROPERTIES_HIBERNATE_CONNECTION_CHARACTERENCODING: UTF-8
+      SPRING_JPA_PROPERTIES_HIBERNATE_CONNECTION_USEUNICODE: true
     ports:
       - "8080:8080"
     depends_on:
@@ -73,13 +78,16 @@ services:
       dockerfile: Dockerfile
     container_name: courier-app
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-mensajeria:3306/mensajeria?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-mensajeria:3306/mensajeria?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8&useUnicode=true&connectionCollation=utf8mb4_unicode_ci
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
       TENANT_SERVICE_URL: http://tenant-app:8080
       SERVER_PORT: 8081
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
+      SPRING_JPA_PROPERTIES_HIBERNATE_CONNECTION_CHARSET: utf8mb4
+      SPRING_JPA_PROPERTIES_HIBERNATE_CONNECTION_CHARACTERENCODING: UTF-8
+      SPRING_JPA_PROPERTIES_HIBERNATE_CONNECTION_USEUNICODE: true
     ports:
       - "8081:8081"
     depends_on:
@@ -116,7 +124,7 @@ services:
     environment:
       - NODE_ENV=production
     ports:
-      - "3000:80"  # Solo exponemos el frontend
+      - "3000:80"
     depends_on:
       - courier-app
       - tenant-app
@@ -133,7 +141,7 @@ services:
     environment:
       - NODE_ENV=production
     ports:
-      - "3001:80"  # Solo exponemos el frontend
+      - "3001:80"
     depends_on:
       - courier-app
       - tenant-app

@@ -33,6 +33,11 @@ export default function SuperTenants() {
   const [administradores, setAdministradores] = useState([]);
   const [adminSeleccionado, setAdminSeleccionado] = useState('');
   const [tenantParaAsociar, setTenantParaAsociar] = useState(null);
+  const [busquedaAdmin, setBusquedaAdmin] = useState('');
+  const [mostrarSugerencias, setMostrarSugerencias] = useState(false);
+  const [adminSeleccionadoObj, setAdminSeleccionadoObj] = useState(null);
+  const [filtroAdmin, setFiltroAdmin] = useState('');
+  const [mostrarDropdownAdmin, setMostrarDropdownAdmin] = useState(false);
 
   const token = localStorage.getItem('token');
   const headers = {
@@ -45,24 +50,24 @@ export default function SuperTenants() {
   }, []);
 
   const cargarDatos = async () => {
-    setLoading(true);
-    
-    try {
-      const [tenantsRes, planesRes, estadosRes] = await Promise.all([
-        axios.get('/tenant/api/tenants', { headers }),
-        axios.get('/tenant/api/planes', { headers }),
-        axios.get('/tenant/api/estados', { headers })
-      ]);
+      setLoading(true);
+      
+      try {
+        const [tenantsRes, planesRes, estadosRes] = await Promise.all([
+          axios.get('/tenant/api/tenants', { headers }),
+          axios.get('/tenant/api/planes', { headers }),
+          axios.get('/tenant/api/estados', { headers })
+        ]);
 
-      setTenants(tenantsRes.data, []);
-      setPlanes(planesRes.data, []);
-      setEstados(estadosRes.data, []);
+        setTenants(tenantsRes.data, []);
+        setPlanes(planesRes.data, []);
+        setEstados(estadosRes.data, []);
 
-    } catch (error) {
-      console.error('Error al cargar datos:',error.message); 
-    } finally {
-      setLoading(false);
-    }
+      } catch (error) {
+        console.error('Error al cargar datos:',error.message); 
+      } finally {
+        setLoading(false);
+      }
   };
 
   const tenantsFiltrados = tenants.filter(tenant => {
@@ -79,7 +84,6 @@ export default function SuperTenants() {
   const validarCampo = (name, value) => {
     let error = '';
     
-    // Validación específica para planId
     if (name === 'planId') {
       if (!value) {
         error = 'El plan es obligatorio';
@@ -87,7 +91,6 @@ export default function SuperTenants() {
       return error;
     }
     
-    // Validación general para campos de texto
     if (!value || !value.toString().trim()) {
       error = 'Este campo es obligatorio';
     } else {
@@ -130,7 +133,6 @@ export default function SuperTenants() {
         erroresValidacion[campo] = error;
       }
     });
-    
     
     setErrores(erroresValidacion);
     const esValido = Object.keys(erroresValidacion).length === 0;
@@ -217,24 +219,28 @@ export default function SuperTenants() {
   };
 
   const handleEliminar = async (id) => {
-    if (confirm('¿Eliminar tenant?')) {
+    if (confirm('¿Eliminar tenant? Esto también eliminará todos los usuarios asociados a este tenant.')) {
       try {
+        try {
+          await axios.delete(`/proxy/api/usuarios/por-tenant/${id}`, { headers });
+        } catch (userError) {
+          console.warn('Error al eliminar usuarios del tenant:', userError);
+        }
+
         try {
           await axios.delete(`/proxy/api/empresas-mensajeria/${id}`, { headers });
         } catch (empresaError) {
           console.error('Error al eliminar empresa de mensajería:', empresaError);
-          console.error('Response data:', empresaError.response?.data);
           const errorMsg = empresaError.response?.data?.error || empresaError.message;
           console.warn(`Advertencia: Error al eliminar empresa de mensajería: ${errorMsg}`);
         }
         
         await axios.delete(`/tenant/api/tenants/${id}`, { headers });
         cargarDatos();
-        alert('Tenant eliminado correctamente');
+        alert('Tenant y todos sus usuarios asociados eliminados correctamente');
         
       } catch (error) {
         console.error('Error al eliminar tenant:', error);
-        console.error('Response data:', error.response?.data);
         alert(`Error al eliminar tenant: ${error.response?.data?.message || error.message}`);
       }
     }
@@ -242,71 +248,102 @@ export default function SuperTenants() {
 
   const cargarAdministradoresDisponibles = async () => {
     try {
-      const meRes = await axios.get('/proxy/api/auth/me', { headers });
-      const usuarioActual = meRes.data.data;
-      
       const usuariosRes = await axios.get('/proxy/api/usuarios/admin-mensajeria', { headers });
       
-      const usuariosFiltrados = (usuariosRes.data.data || []).filter(usuario => {
-        return usuario.id !== usuarioActual.id && 
-              usuario.rolId === 2 && 
-              !usuario.empresaId; 
-      });
+      const todosLosAdministradores = usuariosRes.data.data || [];
       
-      setAdministradores(usuariosFiltrados);
+      setAdministradores(todosLosAdministradores);
     } catch (error) {
       console.error('Error al cargar administradores:', error);
       alert('Error al cargar administradores disponibles');
     }
   };
 
-  const handleAsociarAdmin = (tenant) => {
+  const refrescarAdministradores = async () => {
+    await cargarAdministradoresDisponibles();
+  };
+
+  const handleAsociarAdmin = async (tenant) => {
     setTenantParaAsociar(tenant);
     setAdminSeleccionado('');
     setModalAdminVisible(true);
-    cargarAdministradoresDisponibles();
+    await cargarAdministradoresDisponibles();
   };
 
   const handleDesasociarAdmin = async (tenant) => {
-    try {
-      await axios.put(`/tenant/api/tenants/${tenant.id}/admin-mensajeria`, {
-        adminMensajeriaId: null
-      }, { headers });
-      
-      setTenants(prevTenants => 
-        prevTenants.map(t => 
-          t.id === tenant.id 
-            ? { ...t, idAdminMensajeria: null, adminNombre: null }
-            : t
-        )
-      );
-      
-      alert('Administrador desasociado correctamente');
-      
-    } catch (error) {
-      console.error('Error al desasociar administrador:', error);
-      alert('Error al desasociar administrador');
+    if (confirm('¿Desasociar administrador de este tenant? El administrador regresará al pool de disponibles.')) {
+      try {
+        try {
+          await axios.put(`/proxy/api/usuarios/${tenant.idAdminMensajeria}/regresar-pool`, {}, { headers });
+        } catch (usuarioError) {
+          console.error('Error al regresar usuario al pool:', usuarioError);
+          console.warn('Continuando con desasociación a pesar del error en transferencia');
+        }
+        
+        await axios.put(`/tenant/api/tenants/${tenant.id}/admin-mensajeria`, {
+          adminMensajeriaId: null
+        }, { headers });
+        
+        setTenants(prevTenants => 
+          prevTenants.map(t => 
+            t.id === tenant.id 
+              ? { ...t, idAdminMensajeria: null, adminNombre: null }
+              : t
+          )
+        );
+        
+        alert('Administrador desasociado correctamente y regresado al pool de disponibles');
+        
+        await refrescarAdministradores();
+        
+      } catch (error) {
+        console.error('Error al desasociar administrador:', error);
+        alert(`Error al desasociar administrador: ${error.response?.data?.error || error.message}`);
+      }
     }
   };
 
   const confirmarAsociacion = async () => {
     try {
+      const adminYaAsignado = tenants.find(tenant => 
+        tenant.idAdminMensajeria === parseInt(adminSeleccionado) && 
+        tenant.id !== tenantParaAsociar.id
+      );
+      
+      if (adminYaAsignado) {
+        alert('Este administrador ya está asignado a otro tenant');
+        return;
+      }
+
       await axios.put(`/tenant/api/tenants/${tenantParaAsociar.id}/admin-mensajeria`, {
         adminMensajeriaId: parseInt(adminSeleccionado)
       }, { headers });
       
-      await axios.put(`/proxy/api/usuarios/${adminSeleccionado}`, {
-        mensajeriaId: tenantParaAsociar.id
-      }, { headers });
+      try {
+        await axios.put(`/proxy/api/usuarios/${adminSeleccionado}/transferir-tenant`, {
+          nuevoTenantId: tenantParaAsociar.id,
+          mensajeriaId: tenantParaAsociar.id 
+        }, { headers });
+      } catch (usuarioError) {
+        console.error('Error al transferir usuario:', usuarioError);
+        try {
+          await axios.put(`/tenant/api/tenants/${tenantParaAsociar.id}/admin-mensajeria`, {
+            adminMensajeriaId: null
+          }, { headers });
+        } catch (revertError) {
+          console.error('Error al revertir asociación:', revertError);
+        }
+        throw usuarioError;
+      }
       
       setTenants(prevTenants => 
         prevTenants.map(t => 
           t.id === tenantParaAsociar.id 
             ? { 
                 ...t, 
-                idAdminMensajeria: adminSeleccionado,
-                adminNombre: administradores.find(admin => admin.id === adminSeleccionado)?.nombres + ' ' + 
-                            administradores.find(admin => admin.id === adminSeleccionado)?.apellidos
+                idAdminMensajeria: parseInt(adminSeleccionado),
+                adminNombre: administradores.find(admin => admin.id === parseInt(adminSeleccionado))?.nombres + ' ' + 
+                            administradores.find(admin => admin.id === parseInt(adminSeleccionado))?.apellidos
               }
             : t
         )
@@ -316,11 +353,13 @@ export default function SuperTenants() {
       setTenantParaAsociar(null);
       setAdminSeleccionado('');
       
-      alert('Administrador asociado correctamente');
+      alert('Administrador asociado correctamente y transferido al tenant');
+      
+      await refrescarAdministradores();
       
     } catch (error) {
       console.error('Error al asociar administrador:', error);
-      alert('Error al asociar administrador');
+      alert(`Error al asociar administrador: ${error.response?.data?.error || error.message}`);
     }
   };
 
@@ -331,26 +370,43 @@ export default function SuperTenants() {
   };
 
   const handleActivar = async (id) => {
-    try {
-      await axios.put(`/tenant/api/tenants/${id}/activate`, {}, { headers });
-      cargarDatos();
-      alert('Tenant activado correctamente');
-    } catch (error) {
-      console.error('Error al activar tenant:', error);
-      alert('Error al activar tenant');
+    if (confirm('¿Activar tenant? Esto también activará todos los usuarios asociados a este tenant.')) {
+      try {
+        try {
+          await axios.put(`/proxy/api/usuarios/por-tenant/${id}/estado?estadoId=1`, {}, { headers });
+        } catch (userError) {
+          console.warn('Error al activar usuarios del tenant:', userError);
+        }
+
+        await axios.put(`/tenant/api/tenants/${id}/activate`, {}, { headers });
+        cargarDatos();
+        alert('Tenant y todos sus usuarios asociados activados correctamente');
+      } catch (error) {
+        console.error('Error al activar tenant:', error);
+        alert('Error al activar tenant');
+      }
     }
   };
 
   const handleDesactivar = async (id) => {
-    try {
-      await axios.put(`/tenant/api/tenants/${id}/deactivate`, {}, { headers });
-      cargarDatos();
-      alert('Tenant desactivado correctamente');
-    } catch (error) {
-      console.error('Error al desactivar tenant:', error);
-      alert('Error al desactivar tenant');
+    if (confirm('¿Desactivar tenant? Esto también desactivará todos los usuarios asociados a este tenant.')) {
+      try {
+        try {
+          await axios.put(`/proxy/api/usuarios/por-tenant/${id}/estado?estadoId=2`, {}, { headers });
+        } catch (userError) {
+          console.warn('Error al desactivar usuarios del tenant:', userError);
+        }
+
+        await axios.put(`/tenant/api/tenants/${id}/deactivate`, {}, { headers });
+        cargarDatos();
+        alert('Tenant y todos sus usuarios asociados desactivados correctamente');
+      } catch (error) {
+        console.error('Error al desactivar tenant:', error);
+        alert('Error al desactivar tenant');
+      }
     }
   };
+
 
   const limpiarFiltros = () => {
     setFiltroNombre('');
@@ -389,6 +445,18 @@ export default function SuperTenants() {
       case 'Ilimitado': return 'bi-gem';
       default: return 'bi-box';
     }
+  };
+
+  const seleccionarAdmin = (admin) => {
+      setAdminSeleccionado(admin.id);
+      setFiltroAdmin(`${admin.nombres} ${admin.apellidos} - ${admin.email}`);
+      setMostrarDropdownAdmin(false);
+  };
+
+  const limpiarSeleccion = () => {
+      setAdminSeleccionado('');
+      setFiltroAdmin('');
+      setMostrarDropdownAdmin(false);
   };
 
   const calcularDiasDesdeCreacion = (fechaCreacion) => {
@@ -829,7 +897,10 @@ export default function SuperTenants() {
               <button 
                 type="button" 
                 className="btn-close" 
-                onClick={() => setModalAdminVisible(false)}
+                onClick={() => {
+                  setModalAdminVisible(false);
+                  limpiarSeleccion();
+                }}
               ></button>
             </div>
             <div className="modal-body">
@@ -854,25 +925,120 @@ export default function SuperTenants() {
               )}
               
               <div className="mb-3">
-                <label className="form-label">Seleccionar Administrador:</label>
-                <select 
-                  className="form-select" 
-                  value={adminSeleccionado}
-                  onChange={(e) => setAdminSeleccionado(e.target.value)}
-                >
-                  <option value="" disabled hidden>Selecciona un administrador</option>
-                  {administradores.map(admin => (
-                    <option key={admin.id} value={admin.id}>
-                      {admin.nombres} {admin.apellidos} - {admin.email}
-                    </option>
-                  ))}
-                </select>
+                <label htmlFor="adminInput" className="form-label">
+                  <i className="bi bi-search me-1"></i>
+                  Seleccionar administrador
+                </label>
+                <div className="position-relative">
+                  <input
+                    id="adminInput"
+                    type="text"
+                    value={filtroAdmin}
+                    onChange={(e) => setFiltroAdmin(e.target.value)}
+                    onFocus={() => setMostrarDropdownAdmin(true)}
+                    onBlur={() => setTimeout(() => setMostrarDropdownAdmin(false), 200)}
+                    className="form-control"
+                    placeholder="Buscar por nombre o email del administrador"
+                  />
+                  
+                  {mostrarDropdownAdmin && (
+                    <div 
+                      className="dropdown-menu show position-absolute w-100" 
+                      style={{
+                        maxHeight: '200px', 
+                        overflowY: 'auto',
+                        top: '100%',
+                        left: '0',
+                        zIndex: 1000
+                      }}
+                    >
+                      <div 
+                        className="dropdown-item text-muted"
+                        onClick={() => limpiarSeleccion()}
+                      >
+                        <i className="bi bi-x-circle me-2"></i>
+                        Limpiar selección
+                      </div>
+                      
+                      {administradores.length > 0 && <div className="dropdown-divider"></div>}
+                      
+                      {administradores
+                        .filter(admin => admin.tenantId === 0 || admin.mensajeriaId === null)
+                        .filter(admin => 
+                          filtroAdmin === '' || 
+                          `${admin.nombres} ${admin.apellidos}`.toLowerCase().includes(filtroAdmin.toLowerCase()) ||
+                          admin.email.toLowerCase().includes(filtroAdmin.toLowerCase())
+                        )
+                        .map(admin => (
+                          <div 
+                            key={admin.id}
+                            className="dropdown-item d-flex align-items-center"
+                            onClick={() => seleccionarAdmin(admin)}
+                          >
+                            <div className="me-2">
+                              <i className="bi bi-person-circle text-primary"></i>
+                            </div>
+                            <div className="flex-grow-1">
+                              <div className="fw-medium">{admin.nombres} {admin.apellidos}</div>
+                              <small className="text-muted">{admin.email}</small>
+                            </div>
+                            <div className="ms-2">
+                              {admin.tenantId === 0 && admin.mensajeriaId === null && (
+                                <span className="badge bg-success">Completamente Disponible</span>
+                              )}
+                              {admin.tenantId === 0 && admin.mensajeriaId !== null && (
+                                <span className="badge bg-warning">Solo Mensajería</span>
+                              )}
+                              {admin.tenantId !== 0 && admin.mensajeriaId === null && (
+                                <span className="badge bg-info">Solo Tenant</span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      
+                      {administradores
+                        .filter(admin => admin.tenantId === 0 || admin.mensajeriaId === null)
+                        .filter(admin => 
+                          filtroAdmin === '' || 
+                          `${admin.nombres} ${admin.apellidos}`.toLowerCase().includes(filtroAdmin.toLowerCase()) ||
+                          admin.email.toLowerCase().includes(filtroAdmin.toLowerCase())
+                        ).length === 0 && administradores.length > 0 && (
+                        <div className="dropdown-item text-muted">
+                          {administradores.filter(admin => admin.tenantId === 0 || admin.mensajeriaId === null).length === 0 ? (
+                            <>
+                              <i className="bi bi-exclamation-triangle me-2"></i>
+                              No hay administradores disponibles (tenantId=0 o mensajeriaId=null)
+                            </>
+                          ) : (
+                            <>
+                              <i className="bi bi-search me-2"></i>
+                              No se encontraron coincidencias para "{filtroAdmin}"
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {administradores.filter(admin => admin.tenantId === 0 || admin.mensajeriaId === null).length === 0 && (
+                  <small className="text-warning">
+                    No hay administradores disponibles
+                  </small>
+                )}
+                {administradores.filter(admin => admin.tenantId === 0 || admin.mensajeriaId === null).length > 0 && (
+                  <small className="text-muted">
+                    {administradores.filter(admin => admin.tenantId === 0 || admin.mensajeriaId === null).length} de {administradores.length} administradores disponibles
+                  </small>
+                )}
               </div>
               
-              {administradores.length === 0 && (
+              {administradores.filter(admin => admin.tenantId === 0 || admin.mensajeriaId === null).length === 0 && (
                 <div className="alert alert-info">
                   <i className="bi bi-info-circle me-2"></i>
-                  No hay administradores disponibles para asociar.
+                  No hay administradores disponibles para asociar. 
+                  <br />
+                  <small>Se requieren administradores con tenantId=0 o mensajeriaId=null</small>
                 </div>
               )}
             </div>
@@ -889,7 +1055,10 @@ export default function SuperTenants() {
               <button 
                 type="button" 
                 className="btn btn-secondary" 
-                onClick={() => setModalAdminVisible(false)}
+                onClick={() => {
+                  setModalAdminVisible(false);
+                  limpiarSeleccion();
+                }}
               >
                 <i className="bi bi-x-circle me-1"></i>
                 Cancelar

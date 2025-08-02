@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -53,5 +54,39 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     List<Usuario> findAllByRolNombre(@Param("nombreRol") String nombreRol);
 
     List<Usuario> findByMensajeriaId(Long mensajeriaId);
+
+    @Modifying
+    @Query("DELETE FROM Usuario u WHERE u.tenantId = :tenantId")
+    void deleteAllByTenantId(@Param("tenantId") Long tenantId);
+
+    @Modifying
+    @Query("UPDATE Usuario u SET u.estado.id = :estadoId WHERE u.tenantId = :tenantId")
+    int updateEstadoByTenantId(@Param("tenantId") Long tenantId, @Param("estadoId") Integer estadoId);
+    
+    @Query("SELECT u FROM Usuario u WHERE u.tenantId = :tenantId OR (:incluirTenantDefault = true AND u.tenantId = 0)")
+    List<Usuario> findByTenantIdIncludingDefault(@Param("tenantId") Long tenantId, 
+                                               @Param("incluirTenantDefault") boolean incluirTenantDefault);
+
+
+       List<Usuario> findAllByTenantIdAndRolNombre(Long tenantId, String rolNombre);
+
+       List<Usuario> findAllByRolNombreAndTenantIdNot(String rolNombre, Long tenantId);
+
+       @Query("SELECT u FROM Usuario u WHERE u.tenantId = :tenantId " +
+              "AND u.rol.nombre = :rolNombre " +
+              "AND u.mensajeria IS NULL " +
+              "AND u.estado.id = :estadoId")
+       List<Usuario> findAllByTenantIdAndRolNombreAndMensajeriaIsNullAndEstadoId(
+       @Param("tenantId") Long tenantId, 
+       @Param("rolNombre") String rolNombre, 
+       @Param("estadoId") Integer estadoId);
+
+       List<Usuario> findAllByRolNombreAndMensajeriaIsNull(String rolNombre);
+
+       @Query("SELECT u FROM Usuario u WHERE u.rol.nombre = 'ADMIN_MENSAJERIA' " +
+              "AND u.mensajeria IS NULL " +
+              "AND u.tenantId = 0 " +
+              "AND u.estado.id = 1")
+       List<Usuario> findAdministradoresMensajeriaDisponibles();
 
 }

@@ -191,4 +191,64 @@ public class EmpresaMensajeriaService {
         List<EmpresaMensajeria> empresas = empresaRepository.findAll();
         return empresaMapper.toDto(empresas);
     }
+
+    @Transactional
+    public void eliminarSuperAdmin(Long id) {
+        validarId(id);
+        
+        EmpresaMensajeria empresa = empresaRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Empresa no encontrada con ID: " + id));
+        
+        EstadoGeneral estadoInactivo = estadoRepository.findById(2)
+            .orElseThrow(() -> new RuntimeException("Estado inactivo no encontrado"));
+        
+        List<Usuario> usuariosAsociados = usuarioRepository.findByMensajeriaId(id);
+        
+        if (!usuariosAsociados.isEmpty()) {
+            for (Usuario usuario : usuariosAsociados) {
+                usuario.setEstado(estadoInactivo);
+            }
+            usuarioRepository.saveAll(usuariosAsociados);
+        }
+        
+        empresa.setEstado(estadoInactivo);
+        empresaRepository.save(empresa);
+    }
+
+    @Transactional
+    public void eliminarFisicamenteSuperAdmin(Long id) {
+        validarId(id);
+        
+        EmpresaMensajeria empresa = empresaRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Empresa no encontrada con ID: " + id));
+        
+        List<Usuario> usuariosAsociados = usuarioRepository.findByMensajeriaId(id);
+        
+        if (!usuariosAsociados.isEmpty()) {                
+            for (Usuario usuario : usuariosAsociados) {
+                usuarioRepository.delete(usuario);
+            }
+        }
+
+        empresaRepository.delete(empresa);
+    }
+
+    
+    @Transactional
+    public void eliminarFisicamente(Long id, Long tenantId) {
+        validarId(id);
+        validarTenantId(tenantId);
+        
+        EmpresaMensajeria empresa = empresaRepository.findByTenantIdAndId(tenantId, id)
+            .orElseThrow(() -> new RuntimeException("Empresa no encontrada con ID: " + id));
+        
+        List<Usuario> usuariosAsociados = usuarioRepository.findByMensajeriaId(id);
+        if (!usuariosAsociados.isEmpty()) {
+            usuarioRepository.deleteAll(usuariosAsociados);
+            System.out.println("Usuarios asociados eliminados físicamente para empresa ID: " + id);
+        }
+        
+        empresaRepository.delete(empresa);
+        System.out.println("Empresa eliminada físicamente con ID: " + id);
+    }
 }

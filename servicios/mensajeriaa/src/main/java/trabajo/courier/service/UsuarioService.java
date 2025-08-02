@@ -26,6 +26,8 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
 
+    private static final Long TENANT_DEFAULT_ADMIN_MENSAJERIA = 0L; 
+
     public UsuarioService(UsuarioRepository usuarioRepository,
                          PedidoRepository pedidoRepository,
                          UsuarioMapper usuarioMapper,
@@ -40,16 +42,22 @@ public class UsuarioService {
 
     @Transactional
     public UsuarioDTO crearDesdeRequest(CrearUsuarioRequest request, Long tenantId) {
-        if (usuarioRepository.existsByTenantIdAndEmail(tenantId, request.getEmail())) {
+        
+        Long tenantIdFinal = tenantId;
+        if (request.getRolId() == 2 && tenantId == null) { 
+            tenantIdFinal = TENANT_DEFAULT_ADMIN_MENSAJERIA;
+        }
+        
+        if (usuarioRepository.existsByTenantIdAndEmail(tenantIdFinal, request.getEmail())) {
             throw new RuntimeException("El email ya está registrado para este tenant");
         }
 
-        if (usuarioRepository.existsByTenantIdAndNombreUsuario(tenantId, request.getNombreUsuario())) {
+        if (usuarioRepository.existsByTenantIdAndNombreUsuario(tenantIdFinal, request.getNombreUsuario())) {
             throw new RuntimeException("El nombre de usuario ya está registrado para este tenant");
         }
 
         Usuario usuario = new Usuario();
-        usuario.setTenantId(tenantId);
+        usuario.setTenantId(tenantIdFinal);
         usuario.setNombreUsuario(request.getNombreUsuario());
         usuario.setNombres(request.getNombres());
         usuario.setApellidos(request.getApellidos());
@@ -66,7 +74,7 @@ public class UsuarioService {
         usuario.setRol(rol);
 
         EstadoGeneral estado = new EstadoGeneral();
-        estado.setId(1); // Activo por defecto
+        estado.setId(1); 
         usuario.setEstado(estado);
 
         String passwordTemporal = generarPasswordRandom(12);
@@ -199,5 +207,212 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findById(usuarioId)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         return usuario.getTenantId(); 
+    }
+
+    public List<UsuarioDTO> obtenerUsuariosPorTenant(Long tenantId) {
+        List<Usuario> usuarios = usuarioRepository.findAllByTenantId(tenantId);
+        return usuarioMapper.toDTOList(usuarios);
+    }
+
+
+    @Transactional
+    public int eliminarUsuariosPorTenant(Long tenantId) {
+        if (tenantId == null) {
+            throw new RuntimeException("Tenant ID no puede ser nulo");
+        }
+
+        List<Usuario> usuarios = usuarioRepository.findAllByTenantId(tenantId);
+        
+        if (usuarios.isEmpty()) {
+            System.out.println("No hay usuarios para eliminar en el tenant: " + tenantId);
+            return 0;
+        }
+
+        for (Usuario usuario : usuarios) {
+            if (usuario.getRol() != null && "mensajero".equalsIgnoreCase(usuario.getRol().getNombre())) {
+                long pedidosActivos = pedidoRepository.contarPedidosActivosPorMensajero(usuario.getId());
+                if (pedidosActivos > 0) {
+                    throw new RuntimeException(
+                        "No se pueden eliminar los usuarios porque el mensajero " + 
+                        usuario.getNombres() + " " + usuario.getApellidos() + 
+                        " tiene pedidos activos asignados"
+                    );
+                }
+            }
+        }
+
+        int cantidadEliminada = usuarios.size();
+        usuarioRepository.deleteAllByTenantId(tenantId);
+        
+        System.out.println("Eliminados " + cantidadEliminada + " usuarios del tenant: " + tenantId);
+        return cantidadEliminada;
+    }
+
+    @Transactional
+    public int cambiarEstadoUsuariosPorTenant(Long tenantId, Integer estadoId) {
+        if (tenantId == null || estadoId == null) {
+            throw new RuntimeException("Tenant ID y Estado ID no pueden ser nulos");
+        }
+
+        List<Usuario> usuarios = usuarioRepository.findAllByTenantId(tenantId);
+        
+        if (usuarios.isEmpty()) {
+            System.out.println("No hay usuarios para actualizar en el tenant: " + tenantId);
+            return 0;
+        }
+
+        EstadoGeneral nuevoEstado = new EstadoGeneral();
+        nuevoEstado.setId(estadoId);
+
+        for (Usuario usuario : usuarios) {
+            usuario.setEstado(nuevoEstado);
+        }
+
+        usuarioRepository.saveAll(usuarios);
+        
+        System.out.println("Actualizado estado de " + usuarios.size() + " usuarios del tenant: " + tenantId);
+        return usuarios.size();
+    }
+
+    @Transactional
+    public void desasignarMensajeria(Long usuarioId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        
+        usuario.setMensajeria(null);
+        usuarioRepository.save(usuario);
+        
+        System.out.println("Mensajería desasignada del usuario: " + usuarioId);
+    }
+
+    
+    @Transactional
+    public void asignarMensajeria(Long usuarioId, Long mensajeriaId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        
+        if (!esUsuarioDisponibleParaAsignacion(usuarioId)) {
+            throw new RuntimeException("El usuario no está disponible para asignación");
+        }
+        
+        EmpresaMensajeria mensajeria = new EmpresaMensajeria();
+        mensajeria.setId(mensajeriaId);
+        usuario.setMensajeria(mensajeria);
+        
+        usuarioRepository.save(usuario);
+        
+        System.out.println("Mensajería " + mensajeriaId + " asignada al usuario: " + usuarioId);
+    }
+
+    @Transactional
+    public void transferirAdminATenant(Long usuarioId, Long nuevoTenantId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            
+        if (!usuario.getTenantId().equals(TENANT_DEFAULT_ADMIN_MENSAJERIA)) {
+            throw new RuntimeException("El usuario ya está asignado a un tenant específico");
+        }
+        
+        usuario.setTenantId(nuevoTenantId);
+        
+        EmpresaMensajeria mensajeria = new EmpresaMensajeria();
+        mensajeria.setId(nuevoTenantId); 
+        usuario.setMensajeria(mensajeria);
+        
+        usuarioRepository.save(usuario);
+        
+        System.out.println("Admin transferido del tenant 0 al tenant: " + nuevoTenantId);
+    }
+
+    @Transactional
+    public UsuarioDTO transferirAdminATenant(Long usuarioId, Long nuevoTenantId, Long mensajeriaId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            
+        if (usuario.getRol() == null || !"ADMIN_MENSAJERIA".equals(usuario.getRol().getNombre())) {
+            throw new RuntimeException("El usuario no es un administrador de mensajería");
+        }
+        
+        if (!usuario.getTenantId().equals(TENANT_DEFAULT_ADMIN_MENSAJERIA)) {
+            throw new RuntimeException("El usuario ya está asignado a un tenant específico: " + usuario.getTenantId());
+        }
+        
+        if (usuario.getMensajeria() != null) {
+            throw new RuntimeException("El usuario ya tiene una mensajería asignada");
+        }
+        
+        usuario.setTenantId(nuevoTenantId);
+        
+        if (mensajeriaId != null) {
+            EmpresaMensajeria mensajeria = new EmpresaMensajeria();
+            mensajeria.setId(mensajeriaId);
+            usuario.setMensajeria(mensajeria);
+        }
+        
+        usuario = usuarioRepository.save(usuario);
+        
+        System.out.println("Admin " + usuarioId + " transferido del tenant 0 al tenant: " + nuevoTenantId);
+        return usuarioMapper.toDTO(usuario);
+    }
+
+    @Transactional
+    public UsuarioDTO regresarAdminAPoolDisponible(Long usuarioId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            
+        if (usuario.getRol() == null || !"ADMIN_MENSAJERIA".equals(usuario.getRol().getNombre())) {
+            throw new RuntimeException("El usuario no es un administrador de mensajería");
+        }
+        
+        if (usuario.getTenantId().equals(TENANT_DEFAULT_ADMIN_MENSAJERIA)) {
+            System.out.println("Admin " + usuarioId + " ya está en el pool disponible");
+            return usuarioMapper.toDTO(usuario);
+        }
+        
+        usuario.setTenantId(TENANT_DEFAULT_ADMIN_MENSAJERIA);
+        usuario.setMensajeria(null);
+        
+        usuario = usuarioRepository.save(usuario);
+        
+        System.out.println("Admin " + usuarioId + " regresado al pool disponible (tenant 0)");
+        return usuarioMapper.toDTO(usuario);
+    }
+
+    @Transactional
+    public boolean esUsuarioDisponibleParaAsignacion(Long usuarioId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        
+        return usuario.getRol() != null && 
+            "ADMIN_MENSAJERIA".equals(usuario.getRol().getNombre()) &&
+            usuario.getTenantId().equals(TENANT_DEFAULT_ADMIN_MENSAJERIA) &&
+            usuario.getMensajeria() == null &&
+            usuario.getEstado() != null &&
+            usuario.getEstado().getId() == 1; 
+    }
+
+    
+    @Transactional
+    public List<UsuarioDTO> obtenerAdministradoresMensajeriaDisponibles() {
+        List<Usuario> usuarios = usuarioRepository.findAllByTenantIdAndRolNombreAndMensajeriaIsNullAndEstadoId(
+            TENANT_DEFAULT_ADMIN_MENSAJERIA, "ADMIN_MENSAJERIA", 1);
+        return usuarioMapper.toDTOList(usuarios);
+    }
+
+    @Transactional
+    public int migrarAdministradoresAlNuevoEsquema() {
+        List<Usuario> adminsSinMensajeria = usuarioRepository.findAllByRolNombreAndMensajeriaIsNull("ADMIN_MENSAJERIA");
+        
+        int migrados = 0;
+        for (Usuario admin : adminsSinMensajeria) {
+            if (!admin.getTenantId().equals(TENANT_DEFAULT_ADMIN_MENSAJERIA)) {
+                admin.setTenantId(TENANT_DEFAULT_ADMIN_MENSAJERIA);
+                usuarioRepository.save(admin);
+                migrados++;
+                System.out.println("Migrado admin " + admin.getId() + " al tenant 0");
+            }
+        }
+        
+        return migrados;
     }
 }
