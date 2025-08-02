@@ -83,13 +83,11 @@ cd multitenant-software-agatha
 ### 2️⃣ Configurar Variables de Entorno
 ```bash
 # Crear archivo .env en la raíz del proyecto
-cat > .env << EOF
 MYSQL_ROOT_PASSWORD=tu_password_root
 MYSQL_USER=tu_usuario
 MYSQL_PASSWORD=tu_password
 JWT_SECRET=tu_jwt_secret_key
 JWT_EXPIRATION_MS=86400000
-EOF
 ```
 
 ### 3️⃣ Verificar Requisitos del Sistema
