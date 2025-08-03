@@ -339,7 +339,6 @@ public class EmpresaMensajeriaController {
      * @param authentication Token de autenticación con información del tenant
      * @return Respuesta sin contenido
      */
-
     @DeleteMapping("/{id}")
     @SuppressWarnings({"CallToPrintStackTrace", "UnnecessaryTemporaryOnConversionFromString"})
     public ResponseEntity<ApiResponseWrapper<Void>> eliminar(
@@ -348,35 +347,50 @@ public class EmpresaMensajeriaController {
             Authentication authentication) {
         try {
             Long tenantId = null;
+            boolean isSuperAdmin = false;
             
-            if (tenantIdHeader != null) {
+            try {
+                TenantAwareAuthenticationToken tenantAuth = extractTenantInfo(authentication);
+                tenantId = tenantAuth.getTenantId();
+                
+                isSuperAdmin = tenantAuth.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_SUPER_ADMIN"));
+                
+            } catch (Exception e) {
+            }
+            
+            if (tenantId == null && tenantIdHeader != null) {
                 try {
                     tenantId = Long.parseLong(tenantIdHeader);
+                    System.out.println("TenantId obtenido del header: " + tenantId);
                 } catch (NumberFormatException e) {
+                    System.out.println("Error parseando tenantId del header: " + e.getMessage());
                 }
             }
             
-            if (tenantId == null) {
-                try {
-                    TenantAwareAuthenticationToken tenantAuth = extractTenantInfo(authentication);
-                    tenantId = tenantAuth.getTenantId();
-                } catch (Exception e) {
+            if (isSuperAdmin && (tenantId == null || tenantId == 0)) {
+                empresaService.eliminarFisicamenteSuperAdmin(id); 
+            } else {
+                if (tenantId == null || tenantId == 0) {
+                    return ResponseEntity.badRequest().body(
+                        ApiResponseWrapper.<Void>builder()
+                            .success(false)
+                            .error("Tenant ID es requerido para eliminar empresa")
+                            .build()
+                    );
                 }
+                empresaService.eliminar(id, tenantId); 
             }
             
-            if (tenantId == null || tenantId == 0) {
-                tenantId = id;
-            }
-
-
-            empresaService.eliminar(id, tenantId);
             return ResponseEntity.ok(
                 ApiResponseWrapper.<Void>builder()
                     .success(true)
-                    .message("Empresa desactivada exitosamente")
+                    .message("Empresa eliminada exitosamente")
                     .build()
             );
+            
         } catch (RuntimeException e) {
+            System.out.println("RuntimeException eliminando empresa: " + e.getMessage());
             if (e.getMessage().contains("no encontrada") || e.getMessage().contains("not found")) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                     ApiResponseWrapper.<Void>builder()
@@ -392,6 +406,8 @@ public class EmpresaMensajeriaController {
                     .build()
             );
         } catch (Exception e) {
+            System.out.println("Exception eliminando empresa: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                 ApiResponseWrapper.<Void>builder()
                     .success(false)

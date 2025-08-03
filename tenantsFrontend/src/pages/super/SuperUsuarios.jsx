@@ -31,6 +31,7 @@ export default function SuperUsuarios() {
   const [usuarioActual, setUsuarioActual] = useState(null);
   const [mostrarDropdown, setMostrarDropdown] = useState(false);
   const [vista, setVista] = useState('lista');
+  const [tenants, setTenants] = useState([]);
 
   const token = localStorage.getItem('token');
   const headers = {
@@ -61,7 +62,7 @@ export default function SuperUsuarios() {
     return coincideNombre && coincideEmpresa && coincideEstado;
   });
 
-    const cargarDatos = async () => {
+  const cargarDatos = async () => {
     setLoading(true);
     try {
         const meRes = await axios.get('/proxy/api/auth/me', { headers });
@@ -101,6 +102,9 @@ export default function SuperUsuarios() {
         } else {
         console.error('Error al cargar empresas:', empresasRes.data);
         }
+
+        const tenantsRes = await axios.get('/tenant/api/tenants', { headers });
+        setTenants(tenantsRes.data || []);
 
     } catch (error) {
         console.error('Error al cargar datos:', error);
@@ -142,13 +146,7 @@ export default function SuperUsuarios() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
-    if (name === 'mensajeriaId') {
-      setEditingUsuario(prev => ({ ...prev, mensajeriaId: Number(value) }));
-      setErrores(prev => ({
-        ...prev,
-        mensajeriaId: value ? '' : 'Debe seleccionar una empresa'
-      }));
-    } else if (name === 'estadoId') {
+    if (name === 'estadoId') {
       setEditingUsuario(prev => ({ ...prev, estadoId: Number(value) }));
       setErrores(prev => ({
         ...prev,
@@ -163,7 +161,7 @@ export default function SuperUsuarios() {
 
   const validarFormulario = () => {
     const erroresValidacion = {};
-    ['email', 'nombreUsuario', 'nombres', 'apellidos', 'mensajeriaId', 'estadoId'].forEach(campo => {
+    ['email', 'nombreUsuario', 'nombres', 'apellidos', 'estadoId'].forEach(campo => {
       let valor = editingUsuario?.[campo];
       const error = validarCampo(campo, valor);
       if (error) erroresValidacion[campo] = error;
@@ -180,8 +178,7 @@ export default function SuperUsuarios() {
       apellidos: '',
       email: '',
       rolId: rolAdminMensajeria?.id || 2, 
-      estadoId: 1,
-      mensajeriaId: ''
+      estadoId: 1
     });
     setFormVisible(true);
     setErrores({});
@@ -193,6 +190,16 @@ export default function SuperUsuarios() {
   const handleEditar = (usuario) => {
     const usuarioSinPass = { ...usuario };
     delete usuarioSinPass.password;
+    
+    if (usuarioSinPass.mensajeriaId) {
+      const empresaAsignada = empresas.find(emp => emp.id === usuarioSinPass.mensajeriaId);
+      const nombreEmpresa = empresaAsignada ? empresaAsignada.nombre : 'Empresa desconocida';
+      
+      if (!confirm(`Este administrador está asignado a "${nombreEmpresa}". ¿Desea continuar editando? Nota: La asignación se mantendrá.`)) {
+        return;
+      }
+    }
+    
     setEditingUsuario(usuarioSinPass);
     setFormVisible(true);
     setErrores({});
@@ -215,13 +222,23 @@ export default function SuperUsuarios() {
     e.preventDefault();
     if (!validarFormulario()) return;
 
-    let usuarioEnviar; 
+    if (editingUsuario?.id && editingUsuario?.mensajeriaId) {
+      const empresa = empresas.find(emp => emp.id === editingUsuario.mensajeriaId);
+      if (empresa && empresa.estadoId !== 1) { 
+        setErrores({
+          ...errores,
+          estadoId: 'No se puede modificar el administrador: está asignado a un tenant inactivo. Active primero el tenant.'
+        });
+        return;
+      }
+    }
 
     try {
       const rolAdminMensajeria = roles.find(rol => rol.nombre === 'ADMIN_MENSAJERIA');
       let usuarioEnviar = { 
         ...editingUsuario,
-        rolId: rolAdminMensajeria?.id || 2 
+        rolId: rolAdminMensajeria?.id || 2,
+        mensajeriaId: editingUsuario.id ? editingUsuario.mensajeriaId : null
       };
 
       const url = usuarioEnviar.id
@@ -239,7 +256,7 @@ export default function SuperUsuarios() {
       if (usuarioEnviar.id) {
         alert('Administrador actualizado correctamente.');
       } else {
-        alert('Administrador creado correctamente. La contraseña fue enviada al correo registrado.');
+        alert('Administrador creado correctamente. La contraseña fue enviada al correo registrado. Podrá asignarlo a un tenant desde la gestión de tenants.');
       }
 
       cargarDatos();
@@ -248,7 +265,6 @@ export default function SuperUsuarios() {
       console.error('Error al guardar usuario:', error);
       console.error('Respuesta del servidor:', error.response?.data); 
       console.error('Status:', error.response?.status);
-      console.error('Datos que se enviaron:', usuarioEnviar);
       alert(`Error al guardar administrador: ${error.response?.data?.error || error.response?.data?.message || error.message}`);
     }
   };
@@ -640,6 +656,7 @@ export default function SuperUsuarios() {
             {editingUsuario?.id ? 'Editar administrador' : 'Nuevo administrador'}
           </div>
           <div className="card-body">
+            
             <form onSubmit={handleGuardar}>
               <div className="row">
                 <div className="col-md-6 mb-3">
@@ -724,48 +741,94 @@ export default function SuperUsuarios() {
               <div className="row">
                 <div className="col-md-6 mb-3">
                   <label className="form-label">
-                    <i className="bi bi-buildings me-1" style={{ color: '#ff6600' }}></i>
-                    Empresa de mensajería <span className="text-danger">*</span>
+                    <i className="bi bi-check-circle me-1" style={{ color: '#17a2b8' }}></i>
+                    Estado <span className="text-danger">*</span>
                   </label>
-                  <select
-                    name="mensajeriaId"
-                    value={editingUsuario?.mensajeriaId || ''}
-                    onChange={handleInputChange}
-                    className={`form-select ${errores.mensajeriaId ? 'is-invalid' : ''}`}
-                    required
-                  >
-                    <option value="" disabled hidden>Seleccionar empresa</option>
-                    {empresas.map(empresa => (
-                      <option key={empresa.id} value={empresa.id}>
-                        {empresa.nombre}
-                      </option>
-                    ))}
-                  </select>
-                  {errores.mensajeriaId && (
-                    <div className="invalid-feedback">{errores.mensajeriaId}</div>
+                  {!editingUsuario?.id ? (
+                    <input
+                      type="text"
+                      className="form-control"
+                      readOnly
+                      value={estadoNombre[estados.find(estado => estado.id === 1)?.nombre] || 'Activo'}
+                      style={{ backgroundColor: '#f8f9fa' }}
+                    />
+                  ) : (
+                    <>
+                      {(() => {
+                        const tenantAsignado = tenants.find(tenant => tenant.idAdminMensajeria === editingUsuario.id);
+                        const tenantInactivo = tenantAsignado && tenantAsignado.estadoId === 2;
+                        const bloqueado = tenantInactivo;
+                          
+                        return (
+                          <>
+                            <select
+                              name="estadoId"
+                              value={editingUsuario?.estadoId || 1}
+                              onChange={handleInputChange}
+                              className={`form-select ${errores.estadoId ? 'is-invalid' : ''}`}
+                              disabled={bloqueado}
+                            >
+                              <option value="" disabled hidden>Seleccionar estado</option>
+                              {estados.map(estado => (
+                                <option key={estado.id} value={estado.id}> 
+                                  {estadoNombre[estado.nombre] || estado.nombre}
+                                </option>
+                              ))}
+                            </select>
+                            
+                            {bloqueado && (
+                              <div className="alert alert-warning mt-2 mb-0" style={{ padding: '0.5rem' }}>
+                                <i className="bi bi-exclamation-triangle me-2"></i>
+                                <small>
+                                  <strong>Restricción:</strong> No se puede cambiar el estado del administrador 
+                                  porque está asignado a un tenant inactivo. Active primero el tenant para 
+                                  modificar el estado del administrador.
+                                </small>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </>
+                  )}
+                  {errores.estadoId && (
+                    <div className="invalid-feedback">{errores.estadoId}</div>
                   )}
                 </div>
 
                 <div className="col-md-6 mb-3">
-                  <label className="form-label">
-                    <i className="bi bi-check-circle me-1" style={{ color: '#17a2b8' }}></i>
-                    Estado <span className="text-danger">*</span>
-                  </label>
-                    <select
-                    name="estadoId"
-                    value={editingUsuario?.estadoId || 1}
-                    onChange={handleInputChange}
-                    className={`form-select ${errores.estadoId ? 'is-invalid' : ''}`}
-                    >
-                    <option value="" disabled hidden>Seleccionar estado</option>
-                    {estados.map(estado => (
-                      <option key={estado.id} value={estado.id}> 
-                        {estadoNombre[estado.nombre] || estado.nombre}
-                      </option>
-                    ))}
-                  </select>
-                  {errores.estadoId && (
-                    <div className="invalid-feedback">{errores.estadoId}</div>
+                  {editingUsuario?.id && editingUsuario?.mensajeriaId ? (
+                    <>
+                      <label className="form-label">
+                        <i className="bi bi-buildings me-1" style={{ color: '#ff6600' }}></i>
+                        Tenant asignado
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        readOnly
+                        value={(() => {
+                          const empresa = empresas.find(emp => emp.id === editingUsuario.mensajeriaId);
+                          return empresa ? empresa.nombre : 'Tenant no encontrado';
+                        })()}
+                        style={{ backgroundColor: '#f8f9fa' }}
+                      />
+                      <small className="text-muted">
+                        Para cambiar la asignación, use la gestión de tenants
+                      </small>
+                    </>
+                  ) : !editingUsuario?.id ? (
+                    <div className="d-flex align-items-end h-100">
+                      <div className="alert alert-success mb-0 w-100" style={{ padding: '0.5rem' }}>
+                        <i className="bi bi-lightbulb me-2"></i>
+                        <small>
+                          <strong>Información:</strong> Este administrador será creado sin asignación a ningún tenant. 
+                          Podrá asignarlo posteriormente desde la gestión de tenants.
+                        </small>
+                      </div>
+                    </div>
+                  ) : (
+                    <div></div>
                   )}
                 </div>
               </div>

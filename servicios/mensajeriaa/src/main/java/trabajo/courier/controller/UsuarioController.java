@@ -1,6 +1,7 @@
 package trabajo.courier.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -405,6 +406,305 @@ public class UsuarioController {
             System.err.println("Error al obtener usuarios ADMIN_MENSAJERIA: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                 ApiResponseWrapper.<List<UsuarioDTO>>builder()
+                    .success(false)
+                    .error("Error interno del servidor")
+                    .build()
+            );
+        }
+    }
+
+    /**
+     * Obtener usuarios por tenant ID 
+     */
+    @GetMapping("/por-tenant/{tenantId}")
+    public ResponseEntity<ApiResponseWrapper<List<UsuarioDTO>>> obtenerUsuariosPorTenant(
+            @PathVariable Long tenantId,
+            Authentication authentication) {
+        try {
+            TenantAwareAuthenticationToken tenantAuth = extractTenantInfo(authentication);
+            
+            // Solo super admin puede consultar usuarios de otros tenants
+            if (!esSuperAdmin(authentication) && !tenantAuth.getTenantId().equals(tenantId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                    ApiResponseWrapper.<List<UsuarioDTO>>builder()
+                        .success(false)
+                        .error("No tiene permisos para consultar usuarios de este tenant")
+                        .build()
+                );
+            }
+
+            System.out.println("Obteniendo usuarios para tenant: " + tenantId);
+
+            List<UsuarioDTO> usuarios = usuarioService.obtenerUsuariosPorTenant(tenantId);
+            return ResponseEntity.ok(
+                ApiResponseWrapper.<List<UsuarioDTO>>builder()
+                    .success(true)
+                    .data(usuarios)
+                    .build()
+            );
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(
+                ApiResponseWrapper.<List<UsuarioDTO>>builder()
+                    .success(false)
+                    .error(e.getMessage())
+                    .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                ApiResponseWrapper.<List<UsuarioDTO>>builder()
+                    .success(false)
+                    .error("Error interno del servidor")
+                    .build()
+            );
+        }
+    }
+
+    /**
+     * Eliminar todos los usuarios de un tenant
+     */
+    @DeleteMapping("/por-tenant/{tenantId}")
+    public ResponseEntity<ApiResponseWrapper<Void>> eliminarUsuariosPorTenant(
+            @PathVariable Long tenantId,
+            Authentication authentication) {
+        try {
+            // Solo super admin puede eliminar usuarios de otros tenants
+            if (!esSuperAdmin(authentication)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                    ApiResponseWrapper.<Void>builder()
+                        .success(false)
+                        .error("No tiene permisos para eliminar usuarios de este tenant")
+                        .build()
+                );
+            }
+
+            System.out.println("Eliminando todos los usuarios del tenant: " + tenantId);
+
+            int usuariosEliminados = usuarioService.eliminarUsuariosPorTenant(tenantId);
+            return ResponseEntity.ok(
+                ApiResponseWrapper.<Void>builder()
+                    .success(true)
+                    .message("Se eliminaron " + usuariosEliminados + " usuarios del tenant")
+                    .build()
+            );
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(
+                ApiResponseWrapper.<Void>builder()
+                    .success(false)
+                    .error(e.getMessage())
+                    .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                ApiResponseWrapper.<Void>builder()
+                    .success(false)
+                    .error("Error interno del servidor")
+                    .build()
+            );
+        }
+    }
+
+    /**
+     * Cambiar estado de todos los usuarios de un tenant
+     */
+    @PutMapping("/por-tenant/{tenantId}/estado")
+    public ResponseEntity<ApiResponseWrapper<Void>> cambiarEstadoUsuariosPorTenant(
+            @PathVariable Long tenantId,
+            @RequestParam Integer estadoId,
+            Authentication authentication) {
+        try {
+            // Solo super admin puede cambiar estado de usuarios de otros tenants
+            if (!esSuperAdmin(authentication)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                    ApiResponseWrapper.<Void>builder()
+                        .success(false)
+                        .error("No tiene permisos para cambiar estado de usuarios de este tenant")
+                        .build()
+                );
+            }
+
+            System.out.println("Cambiando estado de usuarios del tenant: " + tenantId + " a estado: " + estadoId);
+
+            int usuariosActualizados = usuarioService.cambiarEstadoUsuariosPorTenant(tenantId, estadoId);
+            return ResponseEntity.ok(
+                ApiResponseWrapper.<Void>builder()
+                    .success(true)
+                    .message("Se actualizó el estado de " + usuariosActualizados + " usuarios")
+                    .build()
+            );
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(
+                ApiResponseWrapper.<Void>builder()
+                    .success(false)
+                    .error(e.getMessage())
+                    .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                ApiResponseWrapper.<Void>builder()
+                    .success(false)
+                    .error("Error interno del servidor")
+                    .build()
+            );
+        }
+    }
+
+    /**
+     * Obtener administradores de mensajería disponibles (no asignados) 
+     */
+    @GetMapping("/admin-mensajeria/disponibles")
+    public ResponseEntity<ApiResponseWrapper<List<UsuarioDTO>>> obtenerAdministradoresMensajeriaDisponibles(
+            Authentication authentication) {
+        try {
+            System.out.println("Obteniendo administradores de mensajería disponibles (no asignados)");
+            
+            List<UsuarioDTO> usuarios = usuarioService.obtenerAdministradoresMensajeriaDisponibles();
+            
+            return ResponseEntity.ok(
+                ApiResponseWrapper.<List<UsuarioDTO>>builder()
+                    .success(true)
+                    .message("Administradores disponibles obtenidos exitosamente")
+                    .data(usuarios)
+                    .build()
+            );
+            
+        } catch (Exception e) {
+            System.err.println("Error al obtener administradores disponibles: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                ApiResponseWrapper.<List<UsuarioDTO>>builder()
+                    .success(false)
+                    .error("Error interno del servidor")
+                    .build()
+            );
+        }
+    }
+
+    /**
+     * Transferir administrador del tenant 0 a un tenant específico
+     */
+    @PutMapping("/{id}/transferir-tenant")
+    @SuppressWarnings("UseSpecificCatch")
+    public ResponseEntity<ApiResponseWrapper<UsuarioDTO>> transferirAdminATenant(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> request,
+            Authentication authentication) {
+        try {
+            // Solo super admin puede hacer transferencias
+            if (!esSuperAdmin(authentication)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                    ApiResponseWrapper.<UsuarioDTO>builder()
+                        .success(false)
+                        .error("No tiene permisos para transferir administradores")
+                        .build()
+                );
+            }
+
+            Long nuevoTenantId = Long.valueOf(request.get("nuevoTenantId").toString());
+            Long mensajeriaId = request.get("mensajeriaId") != null ? 
+                            Long.valueOf(request.get("mensajeriaId").toString()) : null;
+
+            System.out.println("Transfiriendo admin ID: " + id + " al tenant: " + nuevoTenantId);
+
+            UsuarioDTO usuario = usuarioService.transferirAdminATenant(id, nuevoTenantId, mensajeriaId);
+            
+            return ResponseEntity.ok(
+                ApiResponseWrapper.<UsuarioDTO>builder()
+                    .success(true)
+                    .message("Administrador transferido correctamente")
+                    .data(usuario)
+                    .build()
+            );
+            
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(
+                ApiResponseWrapper.<UsuarioDTO>builder()
+                    .success(false)
+                    .error(e.getMessage())
+                    .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                ApiResponseWrapper.<UsuarioDTO>builder()
+                    .success(false)
+                    .error("Error interno del servidor")
+                    .build()
+            );
+        }
+    }
+
+    /**
+     * Regresar administrador al pool disponible (tenant 0)
+     */
+    @PutMapping("/{id}/regresar-pool")
+    public ResponseEntity<ApiResponseWrapper<UsuarioDTO>> regresarAdminAPool(
+            @PathVariable Long id,
+            Authentication authentication) {
+        try {
+            // Solo super admin puede hacer transferencias
+            if (!esSuperAdmin(authentication)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                    ApiResponseWrapper.<UsuarioDTO>builder()
+                        .success(false)
+                        .error("No tiene permisos para transferir administradores")
+                        .build()
+                );
+            }
+
+            System.out.println("Regresando admin ID: " + id + " al pool disponible (tenant 0)");
+
+            UsuarioDTO usuario = usuarioService.regresarAdminAPoolDisponible(id);
+            
+            return ResponseEntity.ok(
+                ApiResponseWrapper.<UsuarioDTO>builder()
+                    .success(true)
+                    .message("Administrador regresado al pool disponible")
+                    .data(usuario)
+                    .build()
+            );
+            
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(
+                ApiResponseWrapper.<UsuarioDTO>builder()
+                    .success(false)
+                    .error(e.getMessage())
+                    .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                ApiResponseWrapper.<UsuarioDTO>builder()
+                    .success(false)
+                    .error("Error interno del servidor")
+                    .build()
+            );
+        }
+    }
+
+    /**
+     * Verificar si un administrador está disponible para asignación
+     */
+    @GetMapping("/{id}/disponible-para-asignacion")
+    public ResponseEntity<ApiResponseWrapper<Boolean>> verificarDisponibilidad(
+            @PathVariable Long id,
+            Authentication authentication) {
+        try {
+            boolean disponible = usuarioService.esUsuarioDisponibleParaAsignacion(id);
+            
+            return ResponseEntity.ok(
+                ApiResponseWrapper.<Boolean>builder()
+                    .success(true)
+                    .data(disponible)
+                    .build()
+            );
+            
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(
+                ApiResponseWrapper.<Boolean>builder()
+                    .success(false)
+                    .error(e.getMessage())
+                    .build()
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                ApiResponseWrapper.<Boolean>builder()
                     .success(false)
                     .error("Error interno del servidor")
                     .build()

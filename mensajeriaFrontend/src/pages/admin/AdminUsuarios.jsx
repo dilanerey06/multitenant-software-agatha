@@ -122,7 +122,7 @@ export default function AdminUsuarios() {
 
   const validarCampo = (name, value) => {
     let error = '';
-    if (name !== 'estadoId' && (!value || !value.toString().trim())) {
+    if (!value || !value.toString().trim()) {
       error = 'Este campo es obligatorio';
     } else {
       if (name === 'email') {
@@ -174,6 +174,9 @@ export default function AdminUsuarios() {
       if (error) erroresValidacion[campo] = error;
     });
 
+    if (!editingUsuario?.estadoId || editingUsuario.estadoId === '') {
+      setEditingUsuario(prev => ({ ...prev, estadoId: 1 }));
+    }
     setErrores(erroresValidacion);
     return Object.keys(erroresValidacion).length === 0;
   };
