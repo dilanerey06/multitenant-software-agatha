@@ -110,11 +110,6 @@ free -h
 # Construir e iniciar todos los contenedores
 docker-compose up -d --build
 
-# Verificar el estado de los servicios
-docker-compose ps
-
-# Ver logs de inicialización
-docker-compose logs -f
 ```
 
 ### 5️⃣ Verificar la Instalación
@@ -170,10 +165,6 @@ multitenant-software-agatha/
         │   Middleware Service    │
         │     (Port 8082)         │
         └────────────┬────────────┘
-                     │
-        ┌────────────▼────────────┐
-        │     Load Balancer       │
-        └─────────────────────────┘
                      │
         ┌────────────▼────────────┐
         │                         │
