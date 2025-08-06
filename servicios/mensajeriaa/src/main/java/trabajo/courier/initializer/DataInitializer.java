@@ -63,24 +63,24 @@ public class DataInitializer implements CommandLineRunner {
         // Para pruebas de funcionamiento
         Long tenantId = 1L;
 
-        crearUsuario("superAdminTest", "superadmin@test.com", "super123", 
-                    "SUPER_ADMIN", empresa, estadoActivo, 0L); // Usar 0L para SuperAdmin
+        crearUsuario("superadminUISTest", "superadmin.uis@test.com", "SuperUIS2025!", 
+                    "SUPER_ADMIN", empresa, estadoActivo, 0L, "Super Admin", "UIS Test"); // Usar 0L para SuperAdmin
         
-        crearUsuario("adminTest", "admin@test.com", "admin123", 
-                    "ADMIN_MENSAJERIA", empresa, estadoActivo, tenantId);
+        crearUsuario("adminUISTest", "admin.uis@test.com", "AdminUIS2025!", 
+                    "ADMIN_MENSAJERIA", empresa, estadoActivo, tenantId, "Administrador", "UIS Test");
         
-        crearUsuario("operadorTest", "operador@test.com", "operador123", 
-                    "OPERADOR", empresa, estadoActivo, tenantId);
+        crearUsuario("operadorUISTest", "operador.uis@test.com", "OperadorUIS2025!", 
+                    "OPERADOR", empresa, estadoActivo, tenantId, "Operador", "UIS Test");
         
-        crearUsuario("mensajeroTest", "mensajero@test.com", "mensajero123", 
-                    "MENSAJERO", empresa, estadoActivo, tenantId);
+        crearUsuario("mensajeroUISTest", "mensajero.uis@test.com", "MensajeroUIS2025!", 
+                    "MENSAJERO", empresa, estadoActivo, tenantId, "Mensajero", "UIS Test");
 
         configurarCleanup();
     }
 
     private void crearUsuario(String nombreUsuario, String email, String password, 
                              String nombreRol, EmpresaMensajeria empresa, 
-                             EstadoGeneral estado, Long tenantId) {
+                             EstadoGeneral estado, Long tenantId, String nombres, String apellidos) {
         
         // Buscar usuario sin tenant_id para SuperAdmin
         Optional<Usuario> usuarioExistente;
@@ -106,8 +106,8 @@ public class DataInitializer implements CommandLineRunner {
         usuario.setTenantId(tenantId);
         usuario.setMensajeria(empresa);
         usuario.setNombreUsuario(nombreUsuario);
-        usuario.setNombres("Nombre Test");
-        usuario.setApellidos("Apellido Test");
+        usuario.setNombres(nombres);
+        usuario.setApellidos(apellidos);
         usuario.setEmail(email);
         usuario.setPassword(passwordEncoder.encode(password));
         usuario.setRol(rolOpt.get());

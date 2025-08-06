@@ -149,7 +149,8 @@ export default function AdminDashboardGeneral() {
         entregados: 0,
         activos: 0,
         ingresos: 0,
-        tasaExito: 0
+        tasaExito: 0,
+        tiempoPromedio: 0
       };
 
       if (filtroTiempo === 'hoy') {
@@ -158,7 +159,8 @@ export default function AdminDashboardGeneral() {
           entregados: dashboardData.metricasRapidas.pedidosEntregadosHoy || 0,
           activos: dashboardData.metricasRapidas.pedidosActivos || 0,
           ingresos: dashboardData.metricasRapidas.ingresosHoy || 0,
-          tasaExito: dashboardData.metricasRapidas.tasaExitoHoy || 0
+          tasaExito: dashboardData.metricasRapidas.tasaExitoHoy || 0,
+          tiempoPromedio: dashboardData.metricasRapidas.tiempoPromedio || 0
         };
       } else {
         const totalPedidos = dashboardData.metricasPeriodo.pedidosPeriodo || 0;
@@ -169,7 +171,8 @@ export default function AdminDashboardGeneral() {
           entregados,
           activos: totalPedidos - entregados,
           ingresos: dashboardData.metricasPeriodo.ingresosPeriodo || 0,
-          tasaExito: dashboardData.metricasPeriodo.tasaExito || 0
+          tasaExito: dashboardData.metricasPeriodo.tasaExito || 0,
+          tiempoPromedio: dashboardData.metricasPeriodo.tiempoPromedio || 0
         };
       }
     };
@@ -652,7 +655,7 @@ export default function AdminDashboardGeneral() {
                   <div className="col-6 mb-3">
                     <div>
                       <h3 className="fw-bold text-info mb-0">
-                        {dashboardGeneral?.tiempoPromedio?.toFixed(1) || 0}
+                        {metricas?.tiempoPromedio?.toFixed(1) || 0}
                       </h3>
                       <small className="text-muted">
                         <i className="bi bi-clock me-1"></i>

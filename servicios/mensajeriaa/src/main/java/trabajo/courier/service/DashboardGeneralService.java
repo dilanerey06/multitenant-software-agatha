@@ -148,6 +148,12 @@ public class DashboardGeneralService {
         List<trabajo.courier.entity.Pedido> pedidosEntregadosHoy = pedidoRepository.filtrarPedidos(
                 tenantId, mensajeriaId, 4, null, null, inicioHoy, finHoy, null);
 
+        double tiempoPromedio = pedidosEntregadosHoy.stream()
+            .filter(p -> p.getTiempoEntregaMinutos() != null)
+            .mapToDouble(p -> p.getTiempoEntregaMinutos().doubleValue())
+            .average()
+            .orElse(0.0);
+
         // Ingresos de hoy
         Double ingresosHoy = pedidoRepository.sumIngresosDiaActual(tenantId, mensajeriaId, 4);
 
@@ -161,6 +167,7 @@ public class DashboardGeneralService {
         metricas.put("ingresosHoy", ingresosHoy != null ? ingresosHoy : 0.0);
         metricas.put("pedidosActivos", pedidosActivos);
         metricas.put("tasaExitoHoy", pedidosHoy > 0 ? (pedidosEntregadosHoy.size() * 100.0 / pedidosHoy) : 0);
+        metricas.put("tiempoPromedio", tiempoPromedio);
 
         return metricas;
     }
@@ -181,6 +188,12 @@ public class DashboardGeneralService {
         List<trabajo.courier.entity.Pedido> pedidosEntregados = pedidoRepository.filtrarPedidos(
                 tenantId, mensajeriaId, 4, null, null, inicio, fin, null);
 
+        double tiempoPromedio = pedidosEntregados.stream()
+            .filter(p -> p.getTiempoEntregaMinutos() != null)
+            .mapToDouble(p -> p.getTiempoEntregaMinutos().doubleValue())
+            .average()
+            .orElse(0.0);
+
         // Calcular ingresos
         Double ingresosPeriodo = pedidosEntregados.stream()
                 .mapToDouble(p -> p.getTotal() != null ? p.getTotal().doubleValue() : 0.0)
@@ -194,6 +207,7 @@ public class DashboardGeneralService {
         metricas.put("ingresosPeriodo", ingresosPeriodo);
         metricas.put("tasaExito", !pedidosPeriodo.isEmpty() ?
                 (pedidosEntregados.size() * 100.0 / pedidosPeriodo.size()) : 0);
+        metricas.put("tiempoPromedio", tiempoPromedio);
 
         return metricas;
     }

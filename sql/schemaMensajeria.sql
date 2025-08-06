@@ -973,7 +973,7 @@ GROUP BY p.tenant_id, p.mensajeria_id, em.nombre, DATE(p.fecha_creacion)
 ORDER BY p.tenant_id, p.mensajeria_id, fecha DESC;
 
 -- 6. DATOS INICIALES REQUERIDOS
--- Insertar estados básicos
+-- Insertar estados básicos 
 INSERT IGNORE INTO estado_pedido (nombre, descripcion) VALUES
 ('pendiente', 'Pedido creado, esperando asignación'),
 ('asignado', 'Pedido asignado a mensajero'),
@@ -1066,7 +1066,7 @@ INSERT IGNORE INTO empresa_mensajeria (tenant_id, nombre, direccion, telefono, e
 -- Insertar usuarios (mensajeria_id = tenant_id)
 INSERT IGNORE INTO usuario (tenant_id, mensajeria_id, nombre_usuario, nombres, apellidos, email, password, rol_id, estado_id) VALUES
 -- Administradores
-(1, 1, 'admin1', 'Carlos Alberto', 'Rodríguez Pérez', 'admin@mensajeriarapida.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 2, 1),
+-- Se quito el admin default para tenant 1
 (2, 2, 'admin2', 'María Fernanda', 'González López', 'admin@expressdelivery.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 2, 1),
 (3, 3, 'admin3', 'José Luis', 'Martínez Silva', 'admin@domiciliosnorte.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 2, 2),
 
@@ -1292,3 +1292,472 @@ UPDATE pedido SET fecha_entrega = '2024-12-21 15:20:00' WHERE id = 1;
 UPDATE pedido SET fecha_entrega = '2024-12-21 11:45:00' WHERE id = 2;
 UPDATE pedido SET fecha_entrega = '2024-12-21 17:30:00' WHERE id = 5;
 UPDATE pedido SET fecha_entrega = '2024-12-21 10:15:00' WHERE id = 8;
+
+-- Inserción datos tenant 1
+INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, tipo_servicio_id, tarifa_id, 
+                   direccion_recogida_id, direccion_entrega_id, telefono_recogida, telefono_entrega, 
+                   tipo_paquete, peso_kg, valor_declarado, costo_compra, subtotal, total, estado_id, 
+                   tiempo_entrega_minutos, notas, fecha_creacion, fecha_entrega) VALUES
+
+-- Diciembre 2024 - Pedidos 10-13
+(1, 1, 1, 7, 2, 4, 1, 8, '3201234567', '3111234567', 'Almuerzo ejecutivo', 1.80, 35000.00, 0.00, 5000.00, 5000.00, 4, 35, 'Entregado en oficina', '2024-12-22 12:15:00', '2024-12-22 12:50:00'),
+(1, 3, 1, 8, 1, 1, 3, 10, '3187654321', '3133456789', 'Productos navideños', 4.50, 180000.00, 0.00, 8000.00, 8000.00, 4, 55, 'Decoraciones navideñas', '2024-12-23 15:20:00', '2024-12-23 16:15:00'),
+(2, 1, 2, 10, 1, 9, 5, 12, '3143216789', '3155678901', 'Regalos navideños', 3.20, 220000.00, 0.00, 9000.00, 9000.00, 4, 42, 'Envueltos para regalo', '2024-12-24 10:30:00', '2024-12-24 11:12:00'),
+(2, 2, 2, 11, 2, 12, 6, 13, '3198765432', '3166789012', 'Material escolar', 2.10, 95000.00, 0.00, 4500.00, 4500.00, 4, 28, 'Fin de año escolar', '2024-12-28 14:45:00', '2024-12-28 15:13:00');
+
+-- ENERO 2025
+INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, tipo_servicio_id, tarifa_id, 
+                   direccion_recogida_id, direccion_entrega_id, telefono_recogida, telefono_entrega, 
+                   tipo_paquete, peso_kg, valor_declarado, costo_compra, subtotal, total, estado_id, 
+                   tiempo_entrega_minutos, notas, fecha_creacion, fecha_entrega) VALUES
+                   
+(1, 2, 1, 9, 7, 8, 2, 9, '3109876543', '3122345678', 'Medicinas urgentes', 0.80, 125000.00, 0.00, 7000.00, 7000.00, 4, 25, 'Medicamento controlado', '2025-01-05 08:30:00', '2025-01-05 08:55:00'),
+(1, 4, 1, 7, 2, 5, 4, 11, '3156789012', '3144567890', 'Compra semanal', 6.20, 280000.00, 0.00, 6500.00, 6500.00, 4, 48, 'Productos perecederos', '2025-01-12 16:20:00', '2025-01-12 17:08:00'),
+(2, 3, 2, 10, 4, 13, 5, 12, '3143216789', '3155678901', 'Torta cumpleaños', 2.50, 85000.00, 75000.00, 12000.00, 12000.00, 4, 38, 'Compra en pastelería', '2025-01-18 14:15:00', '2025-01-18 14:53:00'),
+(3, 4, 3, 12, 1, 17, 7, 14, '3165432109', '3177890123', 'Comida italiana', 2.80, 58000.00, 0.00, 8500.00, 8500.00, 4, 33, 'Pasta y pizza', '2025-01-25 19:40:00', '2025-01-25 20:13:00');
+
+-- FEBRERO 2025
+INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, tipo_servicio_id, tarifa_id, 
+                   direccion_recogida_id, direccion_entrega_id, telefono_recogida, telefono_entrega, 
+                   tipo_paquete, peso_kg, valor_declarado, costo_compra, subtotal, total, estado_id, 
+                   tiempo_entrega_minutos, notas, fecha_creacion, fecha_entrega) VALUES
+
+(1, 1, 1, 8, 1, 2, 1, 8, '3201234567', '3111234567', 'Cena romántica', 2.20, 95000.00, 0.00, 10000.00, 10000.00, 4, 47, 'San Valentín - manejar con cuidado', '2025-02-14 18:30:00', '2025-02-14 19:17:00'),
+(1, 3, 1, 9, 6, 7, 3, 10, '3187654321', '3133456789', 'Documentos legales', 0.30, 200000.00, 0.00, 4000.00, 4000.00, 4, 22, 'Contratos importantes', '2025-02-20 10:15:00', '2025-02-20 10:37:00'),
+(2, 1, 2, 11, 2, 12, 6, 13, '3198765432', '3166789012', 'Libros universitarios', 3.50, 450000.00, 0.00, 4500.00, 4500.00, 4, 31, 'Nuevo semestre', '2025-02-03 09:20:00', '2025-02-03 09:51:00'),
+(3, 2, 3, 12, 1, 17, 7, 14, '3165432109', '3177890123', 'Desayuno especial', 1.20, 42000.00, 0.00, 8500.00, 8500.00, 4, 29, 'Desayuno continental', '2025-02-28 07:45:00', '2025-02-28 08:14:00');
+
+-- MARZO 2025
+INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, tipo_servicio_id, tarifa_id, 
+                   direccion_recogida_id, direccion_entrega_id, telefono_recogida, telefono_entrega, 
+                   tipo_paquete, peso_kg, valor_declarado, costo_compra, subtotal, total, estado_id, 
+                   tiempo_entrega_minutos, notas, fecha_creacion, fecha_entrega) VALUES
+
+(1, 2, 1, 7, 7, 8, 2, 9, '3109876543', '3122345678', 'Suplementos vitamínicos', 1.50, 180000.00, 0.00, 7000.00, 7000.00, 4, 26, 'Vitaminas del mes', '2025-03-08 11:20:00', '2025-03-08 11:46:00'),
+(1, 4, 1, 8, 2, 6, 4, 11, '3156789012', '3144567890', 'Compras hogar', 7.80, 380000.00, 0.00, 8000.00, 8000.00, 4, 52, 'Productos de limpieza', '2025-03-15 13:40:00', '2025-03-15 14:32:00'),
+(2, 3, 2, 10, 1, 9, 5, 12, '3143216789', '3155678901', 'Postres gourmet', 1.80, 120000.00, 0.00, 9000.00, 9000.00, 4, 36, 'Celebración familiar', '2025-03-22 15:10:00', '2025-03-22 15:46:00'),
+(3, 4, 3, 12, 2, 18, 7, 14, '3165432109', '3177890123', 'Almuerzo familiar', 4.20, 85000.00, 0.00, 5500.00, 5500.00, 4, 41, 'Pizza y lasaña', '2025-03-29 13:25:00', '2025-03-29 14:06:00');
+
+-- ABRIL 2025
+INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, tipo_servicio_id, tarifa_id, 
+                   direccion_recogida_id, direccion_entrega_id, telefono_recogida, telefono_entrega, 
+                   tipo_paquete, peso_kg, valor_declarado, costo_compra, subtotal, total, estado_id, 
+                   tiempo_entrega_minutos, notas, fecha_creacion, fecha_entrega) VALUES
+
+(1, 1, 1, 9, 1, 1, 1, 8, '3201234567', '3111234567', 'Catering evento', 8.50, 650000.00, 0.00, 8000.00, 8000.00, 4, 58, 'Evento corporativo', '2025-04-10 16:00:00', '2025-04-10 16:58:00'),
+(1, 3, 1, 7, 2, 4, 3, 10, '3187654321', '3133456789', 'Artículos oficina', 3.20, 250000.00, 0.00, 5000.00, 5000.00, 4, 34, 'Material de oficina', '2025-04-17 10:30:00', '2025-04-17 11:04:00'),
+(2, 2, 2, 11, 6, 12, 6, 13, '3198765432', '3166789012', 'Documentos académicos', 0.50, 80000.00, 0.00, 4500.00, 4500.00, 4, 24, 'Certificados y diplomas', '2025-04-05 14:20:00', '2025-04-05 14:44:00'),
+(2, 4, 2, 10, 4, 13, 5, 12, '3143216789', '3155678901', 'Ingredientes especiales', 2.30, 150000.00, 130000.00, 12000.00, 12000.00, 4, 45, 'Compra en mercado gourmet', '2025-04-24 11:15:00', '2025-04-24 12:00:00');
+
+-- MAYO 2025
+INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, tipo_servicio_id, tarifa_id, 
+                   direccion_recogida_id, direccion_entrega_id, telefono_recogida, telefono_entrega, 
+                   tipo_paquete, peso_kg, valor_declarado, costo_compra, subtotal, total, estado_id, 
+                   tiempo_entrega_minutos, notas, fecha_creacion, fecha_entrega) VALUES
+
+(1, 2, 1, 8, 7, 8, 2, 9, '3109876543', '3122345678', 'Medicamentos crónicos', 0.90, 95000.00, 0.00, 7000.00, 7000.00, 4, 27, 'Tratamiento mensual', '2025-05-02 09:45:00', '2025-05-02 10:12:00'),
+(1, 4, 1, 9, 2, 5, 4, 11, '3156789012', '3144567890', 'Despensa familiar', 9.20, 420000.00, 0.00, 6500.00, 6500.00, 4, 61, 'Compra quincenal', '2025-05-16 17:30:00', '2025-05-16 18:31:00'),
+(2, 1, 2, 10, 1, 10, 5, 12, '3143216789', '3155678901', 'Torta día de la madre', 3.80, 180000.00, 0.00, 7500.00, 7500.00, 4, 39, 'Celebración especial', '2025-05-11 12:20:00', '2025-05-11 12:59:00'),
+(3, 3, 3, 12, 1, 17, 7, 14, '3165432109', '3177890123', 'Cena italiana', 3.50, 95000.00, 0.00, 8500.00, 8500.00, 4, 44, 'Pasta artesanal', '2025-05-23 18:15:00', '2025-05-23 18:59:00');
+
+-- JUNIO 2025
+INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, tipo_servicio_id, tarifa_id, 
+                   direccion_recogida_id, direccion_entrega_id, telefono_recogida, telefono_entrega, 
+                   tipo_paquete, peso_kg, valor_declarado, costo_compra, subtotal, total, estado_id, 
+                   tiempo_entrega_minutos, notas, fecha_creacion, fecha_entrega) VALUES
+
+(1, 1, 1, 7, 1, 2, 1, 8, '3201234567', '3111234567', 'Comida día del padre', 4.20, 150000.00, 0.00, 10000.00, 10000.00, 4, 49, 'Celebración papá', '2025-06-15 13:00:00', '2025-06-15 13:49:00'),
+(1, 3, 1, 8, 6, 7, 3, 10, '3187654321', '3133456789', 'Certificados digitales', 0.20, 120000.00, 0.00, 4000.00, 4000.00, 4, 18, 'Documentos urgentes', '2025-06-08 15:40:00', '2025-06-08 15:58:00'),
+(2, 4, 2, 11, 2, 12, 6, 13, '3198765432', '3166789012', 'Libros vacaciones', 2.80, 320000.00, 0.00, 4500.00, 4500.00, 4, 32, 'Lectura de verano', '2025-06-20 11:30:00', '2025-06-20 12:02:00'),
+(3, 2, 3, 12, 2, 18, 7, 14, '3165432109', '3177890123', 'Helados artesanales', 1.50, 65000.00, 0.00, 5500.00, 5500.00, 4, 25, 'Postres de verano', '2025-06-27 16:45:00', '2025-06-27 17:10:00');
+
+-- JULIO 2025
+INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, tipo_servicio_id, tarifa_id, 
+                   direccion_recogida_id, direccion_entrega_id, telefono_recogida, telefono_entrega, 
+                   tipo_paquete, peso_kg, valor_declarado, costo_compra, subtotal, total, estado_id, 
+                   tiempo_entrega_minutos, notas, fecha_creacion, fecha_entrega) VALUES
+
+(1, 2, 1, 9, 7, 8, 2, 9, '3109876543', '3122345678', 'Medicina deportiva', 1.20, 85000.00, 0.00, 7000.00, 7000.00, 4, 23, 'Suplementos deportivos', '2025-07-04 10:20:00', '2025-07-04 10:43:00'),
+(1, 4, 1, 7, 2, 6, 4, 11, '3156789012', '3144567890', 'Productos verano', 5.60, 290000.00, 0.00, 8000.00, 8000.00, 4, 46, 'Protectores solares', '2025-07-11 14:15:00', '2025-07-11 15:01:00'),
+(2, 1, 2, 10, 4, 13, 5, 12, '3143216789', '3155678901', 'Postre helado', 2.10, 95000.00, 85000.00, 12000.00, 12000.00, 4, 37, 'Compra en heladería', '2025-07-18 15:30:00', '2025-07-18 16:07:00'),
+(2, 3, 2, 11, 1, 9, 6, 13, '3198765432', '3166789012', 'Material curso', 1.90, 180000.00, 0.00, 9000.00, 9000.00, 4, 41, 'Curso de verano', '2025-07-25 09:10:00', '2025-07-25 09:51:00');
+
+-- AGOSTO 2025
+INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, tipo_servicio_id, tarifa_id, 
+                   direccion_recogida_id, direccion_entrega_id, telefono_recogida, telefono_entrega, 
+                   tipo_paquete, peso_kg, valor_declarado, costo_compra, subtotal, total, estado_id, 
+                   tiempo_entrega_minutos, notas, fecha_creacion, fecha_entrega) VALUES
+
+(1, 1, 1, 8, 1, 1, 1, 8, '3201234567', '3111234567', 'Almuerzo de negocios', 3.20, 180000.00, 0.00, 8000.00, 8000.00, 3, 0, 'Reunión importante', '2025-08-01 12:30:00', NULL),
+(1, 3, 1, 9, 2, 4, 3, 10, '3187654321', '3133456789', 'Útiles escolares', 2.80, 150000.00, 0.00, 5000.00, 5000.00, 2, 0, 'Regreso a clases', '2025-08-05 08:45:00', NULL),
+(2, 4, 2, NULL, 1, 9, 5, 12, '3143216789', '3155678901', 'Torta cumpleaños', 2.50, 120000.00, 0.00, 9000.00, 9000.00, 1, 0, 'Pendiente asignación', '2025-08-06 10:15:00', NULL),
+(3, 2, 3, 12, 2, 18, 7, 14, '3165432109', '3177890123', 'Almuerzo ejecutivo', 2.20, 75000.00, 0.00, 5500.00, 5500.00, 2, 0, 'Cliente VIP', '2025-08-06 11:20:00', NULL);
+
+INSERT IGNORE INTO historial_pedido (pedido_id, tipo_cambio_id, valor_anterior, valor_nuevo, usuario_id) VALUES
+-- Diciembre 2024
+(10, 1, 'pendiente', 'asignado', 4),
+(10, 1, 'asignado', 'en_transito', 4),
+(10, 1, 'en_transito', 'entregado', 4),
+(11, 1, 'pendiente', 'asignado', 5),
+(11, 1, 'asignado', 'en_transito', 5),
+(11, 1, 'en_transito', 'entregado', 5),
+(12, 1, 'pendiente', 'asignado', 6),
+(12, 1, 'asignado', 'en_transito', 6),
+(12, 1, 'en_transito', 'entregado', 6),
+(13, 1, 'pendiente', 'asignado', 6),
+(13, 1, 'asignado', 'en_transito', 6),
+(13, 1, 'en_transito', 'entregado', 6),
+
+-- Enero 2025
+(14, 1, 'pendiente', 'asignado', 4),
+(14, 1, 'asignado', 'en_transito', 4),
+(14, 1, 'en_transito', 'entregado', 4),
+(15, 1, 'pendiente', 'asignado', 5),
+(15, 1, 'asignado', 'en_transito', 5),
+(15, 1, 'en_transito', 'entregado', 5),
+(16, 1, 'pendiente', 'asignado', 6),
+(16, 1, 'asignado', 'en_transito', 6),
+(16, 1, 'en_transito', 'entregado', 6),
+(17, 1, 'pendiente', 'asignado', 3),
+(17, 1, 'asignado', 'en_transito', 3),
+(17, 1, 'en_transito', 'entregado', 3),
+
+-- Febrero 2025
+(18, 1, 'pendiente', 'asignado', 4),
+(18, 1, 'asignado', 'en_transito', 4),
+(18, 1, 'en_transito', 'entregado', 4),
+(19, 1, 'pendiente', 'asignado', 5),
+(19, 1, 'asignado', 'en_transito', 5),
+(19, 1, 'en_transito', 'entregado', 5),
+(20, 1, 'pendiente', 'asignado', 6),
+(20, 1, 'asignado', 'en_transito', 6),
+(20, 1, 'en_transito', 'entregado', 6),
+(21, 1, 'pendiente', 'asignado', 3),
+(21, 1, 'asignado', 'en_transito', 3),
+(21, 1, 'en_transito', 'entregado', 3),
+
+-- Marzo 2025
+(22, 1, 'pendiente', 'asignado', 4),
+(22, 1, 'asignado', 'en_transito', 4),
+(22, 1, 'en_transito', 'entregado', 4),
+(23, 1, 'pendiente', 'asignado', 5),
+(23, 1, 'asignado', 'en_transito', 5),
+(23, 1, 'en_transito', 'entregado', 5),
+(24, 1, 'pendiente', 'asignado', 6),
+(24, 1, 'asignado', 'en_transito', 6),
+(24, 1, 'en_transito', 'entregado', 6),
+(25, 1, 'pendiente', 'asignado', 3),
+(25, 1, 'asignado', 'en_transito', 3),
+(25, 1, 'en_transito', 'entregado', 3),
+
+-- Abril 2025
+(26, 1, 'pendiente', 'asignado', 4),
+(26, 1, 'asignado', 'en_transito', 4),
+(26, 1, 'en_transito', 'entregado', 4),
+(27, 1, 'pendiente', 'asignado', 5),
+(27, 1, 'asignado', 'en_transito', 5),
+(27, 1, 'en_transito', 'entregado', 5),
+(28, 1, 'pendiente', 'asignado', 6),
+(28, 1, 'asignado', 'en_transito', 6),
+(28, 1, 'en_transito', 'entregado', 6),
+(29, 1, 'pendiente', 'asignado', 6),
+(29, 1, 'asignado', 'en_transito', 6),
+(29, 1, 'en_transito', 'entregado', 6),
+
+-- Mayo 2025
+(30, 1, 'pendiente', 'asignado', 4),
+(30, 1, 'asignado', 'en_transito', 4),
+(30, 1, 'en_transito', 'entregado', 4),
+(31, 1, 'pendiente', 'asignado', 5),
+(31, 1, 'asignado', 'en_transito', 5),
+(31, 1, 'en_transito', 'entregado', 5),
+(32, 1, 'pendiente', 'asignado', 6),
+(32, 1, 'asignado', 'en_transito', 6),
+(32, 1, 'en_transito', 'entregado', 6),
+(33, 1, 'pendiente', 'asignado', 3),
+(33, 1, 'asignado', 'en_transito', 3),
+(33, 1, 'en_transito', 'entregado', 3),
+
+-- Junio 2025
+(34, 1, 'pendiente', 'asignado', 4),
+(34, 1, 'asignado', 'en_transito', 4),
+(34, 1, 'en_transito', 'entregado', 4),
+(35, 1, 'pendiente', 'asignado', 5),
+(35, 1, 'asignado', 'en_transito', 5),
+(35, 1, 'en_transito', 'entregado', 5),
+(36, 1, 'pendiente', 'asignado', 6),
+(36, 1, 'asignado', 'en_transito', 6),
+(36, 1, 'en_transito', 'entregado', 6),
+(37, 1, 'pendiente', 'asignado', 3),
+(37, 1, 'asignado', 'en_transito', 3),
+(37, 1, 'en_transito', 'entregado', 3),
+
+-- Julio 2025
+(38, 1, 'pendiente', 'asignado', 4),
+(38, 1, 'asignado', 'en_transito', 4),
+(38, 1, 'en_transito', 'entregado', 4),
+(39, 1, 'pendiente', 'asignado', 5),
+(39, 1, 'asignado', 'en_transito', 5),
+(39, 1, 'en_transito', 'entregado', 5),
+(40, 1, 'pendiente', 'asignado', 6),
+(40, 1, 'asignado', 'en_transito', 6),
+(40, 1, 'en_transito', 'entregado', 6),
+(41, 1, 'pendiente', 'asignado', 6),
+(41, 1, 'asignado', 'en_transito', 6),
+(41, 1, 'en_transito', 'entregado', 6),
+
+-- Agosto 2025 (solo cambios para pedidos activos)
+(42, 1, 'pendiente', 'asignado', 4),
+(42, 1, 'asignado', 'en_transito', 4),
+(43, 1, 'pendiente', 'asignado', 5),
+(45, 1, 'pendiente', 'asignado', 3);
+
+
+INSERT IGNORE INTO arqueo_caja (tenant_id, mensajeria_id, usuario_id, fecha, turno_id, efectivo_inicio, egresos, efectivo_real, estado_id, observaciones) VALUES
+
+-- Diciembre 2024
+(1, 1, 4, '2024-12-22', 1, 45000.00, 3500.00, 75500.00, 2, 'Arqueo con pedidos navideños'),
+(1, 1, 5, '2024-12-22', 2, 75500.00, 4200.00, 96300.00, 2, 'Turno tarde diciembre'),
+(1, 1, 6, '2024-12-23', 1, 38000.00, 2800.00, 59500.00, 2, 'Ventas pre-navideñas'),
+(1, 1, 6, '2024-12-24', 1, 42000.00, 3200.00, 62700.00, 2, 'Nochebuena - servicio especial'),
+(1, 1, 3, '2024-12-28', 2, 35000.00, 2100.00, 43500.00, 2, 'Semana entre festividades'),
+
+-- Enero 2025
+(1, 1, 4, '2025-01-05', 1, 50000.00, 4800.00, 77800.00, 2, 'Inicio de año'),
+(1, 1, 5, '2025-01-12', 2, 52000.00, 5200.00, 85200.00, 2, 'Semana laboral normal'),
+(1, 1, 6, '2025-01-18', 1, 44000.00, 3600.00, 59600.00, 2, 'Compras enero'),
+(1, 1, 3, '2025-01-25', 2, 38000.00, 2900.00, 46900.00, 2, 'Fin de enero'),
+
+-- Febrero 2025
+(1, 1, 4, '2025-02-14', 2, 48000.00, 4500.00, 66500.00, 2, 'San Valentín - alta demanda'),
+(1, 1, 5, '2025-02-20', 1, 51000.00, 3800.00, 59800.00, 2, 'Documentos importantes'),
+(1, 1, 6, '2025-02-03', 1, 41000.00, 2900.00, 48400.00, 2, 'Inicio semestre universitario'),
+(1, 1, 3, '2025-02-28', 1, 36000.00, 2400.00, 47000.00, 2, 'Fin de febrero'),
+
+-- Marzo 2025
+(1, 1, 4, '2025-03-08', 1, 49000.00, 4100.00, 70100.00, 2, 'Suplementos y compras'),
+(1, 1, 5, '2025-03-15', 2, 53000.00, 5800.00, 81000.00, 2, 'Productos de limpieza'),
+(1, 1, 6, '2025-03-22', 1, 43000.00, 3400.00, 55400.00, 2, 'Postres gourmet'),
+(1, 1, 3, '2025-03-29', 2, 37000.00, 2700.00, 45200.00, 2, 'Fin de mes'),
+
+-- Abril 2025
+(1, 1, 4, '2025-04-10', 2, 55000.00, 6200.00, 87200.00, 2, 'Catering eventos'),
+(1, 1, 5, '2025-04-17', 1, 47000.00, 3900.00, 55900.00, 2, 'Material oficina'),
+(1, 1, 6, '2025-04-05', 1, 40000.00, 2800.00, 47300.00, 2, 'Documentos académicos'),
+(1, 1, 6, '2025-04-24', 2, 48000.00, 4300.00, 72000.00, 2, 'Compra ingredientes especiales'),
+
+-- Mayo 2025
+(1, 1, 4, '2025-05-02', 1, 46000.00, 3600.00, 56600.00, 2, 'Medicamentos crónicos'),
+(1, 1, 5, '2025-05-16', 2, 54000.00, 6500.00, 88000.00, 2, 'Despensa familiar grande'),
+(1, 1, 6, '2025-05-11', 1, 42000.00, 3200.00, 52700.00, 2, 'Día de la madre'),
+(1, 1, 3, '2025-05-23', 2, 39000.00, 2800.00, 51300.00, 2, 'Cena italiana'),
+
+-- Junio 2025
+(1, 1, 4, '2025-06-15', 2, 52000.00, 4800.00, 72000.00, 2, 'Día del padre'),
+(1, 1, 5, '2025-06-08', 1, 45000.00, 2200.00, 49200.00, 2, 'Documentos digitales'),
+(1, 1, 6, '2025-06-20', 1, 44000.00, 3100.00, 51600.00, 2, 'Libros de verano'),
+(1, 1, 3, '2025-06-27', 2, 38000.00, 2300.00, 46800.00, 2, 'Helados artesanales'),
+
+-- Julio 2025
+(1, 1, 4, '2025-07-04', 1, 47000.00, 3400.00, 53400.00, 2, 'Medicina deportiva'),
+(1, 1, 5, '2025-07-11', 2, 51000.00, 5100.00, 79100.00, 2, 'Productos de verano'),
+(1, 1, 6, '2025-07-18', 2, 46000.00, 4200.00, 66700.00, 2, 'Compra heladería'),
+(1, 1, 6, '2025-07-25', 1, 43000.00, 3700.00, 59000.00, 2, 'Material curso verano'),
+
+-- Agosto 2025 (arqueos abiertos para pedidos actuales)
+(1, 1, 4, '2025-08-01', 2, 50000.00, 1200.00, 51200.00, 1, 'Arqueo en proceso - almuerzo negocios'),
+(1, 1, 6, '2025-08-06', 1, 45000.00, 800.00, 45800.00, 1, 'Arqueo abierto - pedido pendiente');
+
+INSERT IGNORE INTO ingreso_arqueo (arqueo_id, tipo_ingreso_id, pedido_id, monto, descripcion) VALUES
+
+-- Diciembre 2024 - Arqueo 8
+(8, 1, 10, 5000.00, 'Ingreso automático por entrega pedido #10'),
+(8, 1, 11, 8000.00, 'Ingreso automático por entrega pedido #11'),
+(8, 2, NULL, 20000.00, 'Servicios especiales navideños'),
+
+-- Diciembre 2024 - Arqueo 9
+(9, 1, 12, 9000.00, 'Ingreso automático por entrega pedido #12'),
+(9, 1, 13, 4500.00, 'Ingreso automático por entrega pedido #13'),
+(9, 3, NULL, 8000.00, 'Propinas época navideña'),
+
+-- Diciembre 2024 - Arqueo 10
+(10, 1, 12, 9000.00, 'Ingreso automático por entrega pedido #12'),
+(10, 2, NULL, 12500.00, 'Servicios adicionales diciembre'),
+
+-- Diciembre 2024 - Arqueo 11
+(11, 1, 13, 4500.00, 'Ingreso automático por entrega pedido #13'),
+(11, 4, NULL, 16200.00, 'Otros ingresos navideños'),
+
+-- Diciembre 2024 - Arqueo 12
+(12, 4, NULL, 8500.00, 'Ingresos varios del día'),
+
+-- Enero 2025 - Arqueo 13
+(13, 1, 14, 7000.00, 'Ingreso automático por entrega pedido #14'),
+(13, 1, 15, 6500.00, 'Ingreso automático por entrega pedido #15'),
+(13, 2, NULL, 14300.00, 'Servicios enero'),
+
+-- Enero 2025 - Arqueo 14
+(14, 1, 16, 12000.00, 'Ingreso automático por entrega pedido #16'),
+(14, 3, NULL, 25200.00, 'Propinas y bonificaciones'),
+
+-- Enero 2025 - Arqueo 15
+(15, 1, 16, 12000.00, 'Ingreso automático por entrega pedido #16'),
+(15, 2, NULL, 3600.00, 'Servicios adicionales'),
+
+-- Enero 2025 - Arqueo 16
+(16, 1, 17, 8500.00, 'Ingreso automático por entrega pedido #17'),
+
+-- Febrero 2025 - Arqueo 17
+(17, 1, 18, 10000.00, 'Ingreso automático por entrega pedido #18'),
+(17, 1, 19, 4000.00, 'Ingreso automático por entrega pedido #19'),
+(17, 2, NULL, 4500.00, 'Servicios San Valentín'),
+
+-- Febrero 2025 - Arqueo 18
+(18, 1, 19, 4000.00, 'Ingreso automático por entrega pedido #19'),
+(18, 4, NULL, 4800.00, 'Otros ingresos febrero'),
+
+-- Febrero 2025 - Arqueo 19
+(19, 1, 20, 4500.00, 'Ingreso automático por entrega pedido #20'),
+(19, 2, NULL, 2900.00, 'Servicios universitarios'),
+
+-- Febrero 2025 - Arqueo 20
+(20, 1, 21, 8500.00, 'Ingreso automático por entrega pedido #21'),
+(20, 3, NULL, 2500.00, 'Propinas febrero'),
+
+-- Marzo 2025 - Arqueo 21
+(21, 1, 22, 7000.00, 'Ingreso automático por entrega pedido #22'),
+(21, 1, 23, 8000.00, 'Ingreso automático por entrega pedido #23'),
+(21, 2, NULL, 6100.00, 'Servicios marzo'),
+
+-- Marzo 2025 - Arqueo 22
+(22, 1, 23, 8000.00, 'Ingreso automático por entrega pedido #23'),
+(22, 3, NULL, 20000.00, 'Propinas productos limpieza'),
+
+-- Marzo 2025 - Arqueo 23
+(23, 1, 24, 9000.00, 'Ingreso automático por entrega pedido #24'),
+(23, 2, NULL, 3400.00, 'Servicios gourmet'),
+
+-- Marzo 2025 - Arqueo 24
+(24, 1, 25, 5500.00, 'Ingreso automático por entrega pedido #25'),
+(24, 4, NULL, 2700.00, 'Otros ingresos marzo'),
+
+-- Abril 2025 - Arqueo 25
+(25, 1, 26, 8000.00, 'Ingreso automático por entrega pedido #26'),
+(25, 1, 27, 5000.00, 'Ingreso automático por entrega pedido #27'),
+(25, 2, NULL, 24200.00, 'Catering y eventos'),
+
+-- Abril 2025 - Arqueo 26
+(26, 1, 27, 5000.00, 'Ingreso automático por entrega pedido #27'),
+(26, 2, NULL, 3900.00, 'Material oficina'),
+
+-- Abril 2025 - Arqueo 27
+(27, 1, 28, 4500.00, 'Ingreso automático por entrega pedido #28'),
+(27, 2, NULL, 2800.00, 'Documentos académicos'),
+
+-- Abril 2025 - Arqueo 28
+(28, 1, 29, 12000.00, 'Ingreso automático por entrega pedido #29'),
+(28, 2, NULL, 12000.00, 'Compras especializadas'),
+
+-- Mayo 2025 - Arqueo 29
+(29, 1, 30, 7000.00, 'Ingreso automático por entrega pedido #30'),
+(29, 2, NULL, 3600.00, 'Medicamentos crónicos'),
+
+-- Mayo 2025 - Arqueo 30
+(30, 1, 31, 6500.00, 'Ingreso automático por entrega pedido #31'),
+(30, 3, NULL, 27500.00, 'Propinas despensa grande'),
+
+-- Mayo 2025 - Arqueo 31
+(31, 1, 32, 7500.00, 'Ingreso automático por entrega pedido #32'),
+(31, 2, NULL, 3200.00, 'Día de la madre'),
+
+-- Mayo 2025 - Arqueo 32
+(32, 1, 33, 8500.00, 'Ingreso automático por entrega pedido #33'),
+(32, 2, NULL, 4800.00, 'Cena italiana'),
+
+-- Junio 2025 - Arqueo 33
+(33, 1, 34, 10000.00, 'Ingreso automático por entrega pedido #34'),
+(33, 1, 35, 4000.00, 'Ingreso automático por entrega pedido #35'),
+(33, 2, NULL, 8000.00, 'Día del padre'),
+
+-- Junio 2025 - Arqueo 34
+(34, 1, 35, 4000.00, 'Ingreso automático por entrega pedido #35'),
+(34, 4, NULL, 2200.00, 'Documentos digitales'),
+
+-- Junio 2025 - Arqueo 35
+(35, 1, 36, 4500.00, 'Ingreso automático por entrega pedido #36'),
+(35, 2, NULL, 3100.00, 'Libros verano'),
+
+-- Junio 2025 - Arqueo 36
+(36, 1, 37, 5500.00, 'Ingreso automático por entrega pedido #37'),
+(36, 3, NULL, 3000.00, 'Propinas helados'),
+
+-- Julio 2025 - Arqueo 37
+(37, 1, 38, 7000.00, 'Ingreso automático por entrega pedido #38'),
+(37, 2, NULL, 3400.00, 'Medicina deportiva'),
+
+-- Julio 2025 - Arqueo 38
+(38, 1, 39, 8000.00, 'Ingreso automático por entrega pedido #39'),
+(38, 3, NULL, 23100.00, 'Propinas productos verano'),
+
+-- Julio 2025 - Arqueo 39
+(39, 1, 40, 12000.00, 'Ingreso automático por entrega pedido #40'),
+(39, 2, NULL, 8500.00, 'Compra heladería'),
+
+-- Julio 2025 - Arqueo 40
+(40, 1, 41, 9000.00, 'Ingreso automático por entrega pedido #41'),
+(40, 2, NULL, 7000.00, 'Material curso'),
+
+-- Agosto 2025 - Arqueo 41 (en proceso)
+(41, 2, NULL, 1200.00, 'Servicios parciales agosto'),
+
+-- Agosto 2025 - Arqueo 42 (en proceso)
+(42, 2, NULL, 800.00, 'Ingresos pendientes');
+
+
+-- Actualizar estadísticas para mensajeros con entregas completadas
+UPDATE mensajero SET 
+    fecha_ultima_entrega = (
+        SELECT MAX(fecha_entrega) 
+        FROM pedido 
+        WHERE mensajero_id = mensajero.id AND estado_id = 4
+    )
+WHERE id IN (7, 8, 9, 10, 11, 12);
+
+-- Actualizar total de entregas por mensajero
+UPDATE mensajero SET 
+    total_entregas = (
+        SELECT COUNT(*) 
+        FROM pedido 
+        WHERE mensajero_id = mensajero.id AND estado_id = 4
+    );
+
+-- Actualizar último pedido y frecuencia para cada cliente
+UPDATE cliente c SET 
+    c.ultimo_pedido = (
+        SELECT MAX(p.fecha_creacion) 
+        FROM pedido p 
+        WHERE p.cliente_id = c.id
+    ),
+    c.frecuencia_pedidos = (
+        SELECT COUNT(*) 
+        FROM pedido p 
+        WHERE p.cliente_id = c.id
+    )
+WHERE c.id IN (1, 2, 3, 4, 5, 6, 7);
+
+INSERT IGNORE INTO notificacion (tenant_id, usuario_id, tipo_notificacion_id, titulo, mensaje, leida) VALUES
+
+-- Notificaciones de pedidos completados recientes
+(1, 4, 4, 'Pedidos completados', 'Se han completado 8 pedidos en lo que va del mes', FALSE),
+(2, 6, 4, 'Pedidos completados', 'Se han completado 6 pedidos en julio', TRUE),
+(3, 3, 4, 'Pedidos completados', 'Se han completado 4 pedidos en julio', FALSE),
+
+-- Notificaciones de arqueos
+(1, 4, 1, 'Arqueo cerrado', 'Arqueo del 2025-07-25 cerrado exitosamente', TRUE),
+(2, 6, 1, 'Arqueo cerrado', 'Arqueo del 2025-07-25 cerrado exitosamente', TRUE),
+(1, 4, 1, 'Arqueo abierto', 'Recuerda cerrar el arqueo del turno actual', FALSE),
+
+-- Notificaciones para mensajeros sobre nuevas asignaciones
+(1, 8, 2, 'Nuevo pedido asignado', 'Se te ha asignado el pedido #42 - Almuerzo de negocios', FALSE),
+(1, 9, 2, 'Nuevo pedido asignado', 'Se te ha asignado el pedido #43 - Útiles escolares', FALSE),
+(3, 12, 2, 'Nuevo pedido asignado', 'Se te ha asignado el pedido #45 - Almuerzo ejecutivo', FALSE);
