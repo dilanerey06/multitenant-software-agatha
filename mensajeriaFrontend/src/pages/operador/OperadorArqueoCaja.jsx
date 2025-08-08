@@ -23,10 +23,16 @@ export default function AdminArqueoCaja() {
 const [arqueosOriginales, setArqueosOriginales] = useState([]);
 const [arqueosFiltrados, setArqueosFiltrados] = useState([]);
 
-const [paginacionManual, setPaginacionManual] = useState({
-  paginaActual: 0,
-  elementosPorPagina: 10
-});
+  const [paginacionManual, setPaginacionManual] = useState({
+    paginaActual: 0,
+    elementosPorPagina: 50
+  });
+
+  const paginarArqueos = (arqueosList) => {
+    const inicio = paginacionManual.paginaActual * paginacionManual.elementosPorPagina;
+    const fin = inicio + paginacionManual.elementosPorPagina;
+    return arqueosList.slice(inicio, fin);
+  };
 
   const [filtros, setFiltros] = useState({
     fechaDesde: '',
@@ -397,10 +403,6 @@ const isTokenExpired = () => {
     pedidoId: ''
   });
 
-  const [currentPage, setCurrentPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const pageSize = 10;
-
   const API_BASE_URL = '/proxy/api';
   const getAuthHeaders = () => ({
     'Content-Type': 'application/json',
@@ -410,57 +412,15 @@ const isTokenExpired = () => {
   });
 
 useEffect(() => {
-  loadInitialData();
-  loadArqueos();
-}, []);
+    loadInitialData();
+    loadArqueos();
+  }, []);
 
-useEffect(() => {
-  if (arqueosOriginales.length > 0) {
-    aplicarFiltros();
-  }
-}, [filtros, arqueosOriginales]);
-
-useEffect(() => {
-  if (arqueosFiltrados.length > 0) {
-    const paginados = paginarArqueos(arqueosFiltrados);
-    setArqueos(paginados);
-  }
-}, [paginacionManual.paginaActual, arqueosFiltrados]);
-
-const PaginacionManual = () => {
-  const totalPaginas = calcularTotalPaginas();
-  
-  if (totalPaginas <= 1) return null;
-  
-  return (
-    <div className="d-flex justify-content-between align-items-center mt-3">
-      <div>
-        <small className="text-muted">
-          Mostrando {paginacionManual.paginaActual * paginacionManual.elementosPorPagina + 1} - {Math.min((paginacionManual.paginaActual + 1) * paginacionManual.elementosPorPagina, arqueosFiltrados.length)} de {arqueosFiltrados.length} arqueos
-        </small>
-      </div>
-      <div>
-        <button 
-          className="btn btn-outline-primary btn-sm me-2"
-          onClick={() => cambiarPagina(paginacionManual.paginaActual - 1)}
-          disabled={paginacionManual.paginaActual === 0}
-        >
-          Anterior
-        </button>
-        <span className="me-2">
-          Página {paginacionManual.paginaActual + 1} de {totalPaginas}
-        </span>
-        <button 
-          className="btn btn-outline-primary btn-sm"
-          onClick={() => cambiarPagina(paginacionManual.paginaActual + 1)}
-          disabled={paginacionManual.paginaActual >= totalPaginas - 1}
-        >
-          Siguiente
-        </button>
-      </div>
-    </div>
-  );
-};
+  useEffect(() => {
+    if (arqueosOriginales.length > 0) {
+      aplicarFiltros();
+    }
+  }, [filtros, arqueosOriginales]);
 
   const loadInitialData = async () => {
     try {
@@ -507,41 +467,44 @@ const PaginacionManual = () => {
   };
 
   const loadArqueos = async () => {
-  try {
-    setLoading(true);
+    try {
+      setLoading(true);
 
+      const params = new URLSearchParams({
+        page: '0',
+        size: '100', 
+        sort: 'fecha,desc'
+      });
 
-     const response = await fetch(`${API_BASE_URL}/arqueo-caja/consultar`, {
-       method: 'POST',
-       headers: getAuthHeaders(),
-       body: JSON.stringify({}) 
-     });
+      const response = await fetch(`${API_BASE_URL}/arqueo-caja/consultar?${params}`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({}) 
+      });
 
-    if (!response.ok) {
-      throw new Error('Error al cargar arqueos');
+      if (!response.ok) {
+        throw new Error('Error al cargar arqueos');
+      }
+
+      const data = await response.json();
+      const pageData = data.data; 
+
+      setArqueosOriginales(pageData.content || []);
+      setArqueosFiltrados(pageData.content || []);
+      
+      const paginados = paginarArqueos(pageData.content || []);
+      setArqueos(paginados);
+
+      const ingresosPromises = paginados.map(arqueo => loadIngresosPorArqueo(arqueo.id));
+      await Promise.all(ingresosPromises);
+
+    } catch (error) {
+      console.error('Error loading arqueos:', error);
+      setError('Error al cargar arqueos');
+    } finally {
+      setLoading(false);
     }
-
-    const data = await response.json();
-    const arqueosData = data.data.content || [];
-    
-    setArqueosOriginales(arqueosData);
-    
-    const filtrados = filtrarArqueos(arqueosData);
-    const paginados = paginarArqueos(filtrados);
-    
-    setArqueosFiltrados(filtrados);
-    setArqueos(paginados);
-
-    const ingresosPromises = paginados.map(arqueo => loadIngresosPorArqueo(arqueo.id));
-    await Promise.all(ingresosPromises);
-
-  } catch (error) {
-    console.error('Error loading arqueos:', error);
-    setError('Error al cargar arqueos');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const filtrarArqueos = (arqueosOriginales) => {
     return arqueosOriginales.filter(arqueo => {
@@ -584,12 +547,6 @@ const PaginacionManual = () => {
     });
   };
 
-  const paginarArqueos = (arqueosParaPaginar) => {
-    const inicio = paginacionManual.paginaActual * paginacionManual.elementosPorPagina;
-    const fin = inicio + paginacionManual.elementosPorPagina;
-    return arqueosParaPaginar.slice(inicio, fin);
-  };
-
   const aplicarFiltros = () => {
     if (!validarFiltros()) {
       setError('Por favor corrija los errores en los filtros');
@@ -598,42 +555,36 @@ const PaginacionManual = () => {
     
     const filtrados = filtrarArqueos(arqueosOriginales);
     setArqueosFiltrados(filtrados);
-    
     setPaginacionManual(prev => ({ ...prev, paginaActual: 0 }));
-    
     const paginados = paginarArqueos(filtrados);
     setArqueos(paginados);
   };
 
-const limpiarFiltros = () => {
-  setFiltros({
-    fechaDesde: '',
-    fechaHasta: '',
-    turnoId: '',
-    estadoId: '',
-    usuarioId: ''
-  });
-  setErroresFiltros({
-    fechaDesde: '',
-    fechaHasta: ''
-  });
-  
-  setArqueosFiltrados(arqueosOriginales);
-  setPaginacionManual(prev => ({ ...prev, paginaActual: 0 }));
-  
-  const paginados = paginarArqueos(arqueosOriginales);
-  setArqueos(paginados);
-};
-
-  const cambiarPagina = (nuevaPagina) => {
+    const handlePageChangeLocal = (nuevaPagina) => {
     setPaginacionManual(prev => ({ ...prev, paginaActual: nuevaPagina }));
     
     const paginados = paginarArqueos(arqueosFiltrados);
     setArqueos(paginados);
   };
 
-  const calcularTotalPaginas = () => {
-    return Math.ceil(arqueosFiltrados.length / paginacionManual.elementosPorPagina);
+  const limpiarFiltros = () => {
+    setFiltros({
+      fechaDesde: '',
+      fechaHasta: '',
+      turnoId: '',
+      estadoId: '',
+      usuarioId: ''
+    });
+    setErroresFiltros({
+      fechaDesde: '',
+      fechaHasta: ''
+    });
+    
+    setArqueosFiltrados(arqueosOriginales);
+    setPaginacionManual(prev => ({ ...prev, paginaActual: 0 }));
+    
+    const paginados = paginarArqueos(arqueosOriginales);
+    setArqueos(paginados);
   };
 
 
@@ -938,6 +889,8 @@ const handleSubmit = async () => {
     });
     setSelectedArqueo(null);
   };
+
+  const totalPaginasFiltradas = Math.ceil(arqueosFiltrados.length / paginacionManual.elementosPorPagina);
 
   const hasAdminMensajeriaRole = () => {
     const currentUser = usuarios.find(user => String(user.id) === String(currentUserId));
@@ -1724,34 +1677,34 @@ const handleSubmit = async () => {
         )
       )}
 
-      {totalPages > 1 && (
+      {totalPaginasFiltradas > 1 && (
         <div className="d-flex justify-content-center mt-4">
           <nav>
             <ul className="pagination">
-              <li className={`page-item ${currentPage === 0 ? 'disabled' : ''}`}>
+              <li className={`page-item ${paginacionManual.paginaActual === 0 ? 'disabled' : ''}`}>
                 <button
                   className="page-link"
-                  onClick={() => setCurrentPage(currentPage - 1)}
-                  disabled={currentPage === 0}
+                  onClick={() => handlePageChangeLocal(paginacionManual.paginaActual - 1)}
+                  disabled={paginacionManual.paginaActual === 0}
                 >
                   Anterior
                 </button>
               </li>
-              {Array.from({ length: totalPages }, (_, i) => (
-                <li key={i} className={`page-item ${currentPage === i ? 'active' : ''}`}>
+              {Array.from({ length: totalPaginasFiltradas }, (_, i) => (
+                <li key={i} className={`page-item ${paginacionManual.paginaActual === i ? 'active' : ''}`}>
                   <button
                     className="page-link"
-                    onClick={() => setCurrentPage(i)}
+                    onClick={() => handlePageChangeLocal(i)}
                   >
                     {i + 1}
                   </button>
                 </li>
               ))}
-              <li className={`page-item ${currentPage === totalPages - 1 ? 'disabled' : ''}`}>
+              <li className={`page-item ${paginacionManual.paginaActual === totalPaginasFiltradas - 1 ? 'disabled' : ''}`}>
                 <button
                   className="page-link"
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                  disabled={currentPage === totalPages - 1}
+                  onClick={() => handlePageChangeLocal(paginacionManual.paginaActual + 1)}
+                  disabled={paginacionManual.paginaActual === totalPaginasFiltradas - 1}
                 >
                   Siguiente
                 </button>

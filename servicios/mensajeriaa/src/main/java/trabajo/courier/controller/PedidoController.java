@@ -59,7 +59,7 @@ public class PedidoController {
 
     @GetMapping
     public ResponseEntity<ApiResponseWrapper<Page<PedidoDTO>>> obtenerTodos(
-        @PageableDefault(size = 20) Pageable pageable,
+        @PageableDefault(size = 50) Pageable pageable,
         Authentication authentication) {
     try {
         TenantAwareAuthenticationToken tenantAuth = extractTenantInfo(authentication);
@@ -87,7 +87,7 @@ public class PedidoController {
 @PostMapping("/filtrar")
 public ResponseEntity<ApiResponseWrapper<Page<PedidoDTO>>> filtrarPedidos(
         @Valid @RequestBody FiltrarPedidosRequest request,
-        @PageableDefault(size = 20) Pageable pageable,
+        @PageableDefault(size = 50) Pageable pageable,
         Authentication authentication) {
     try {
         TenantAwareAuthenticationToken tenantAuth = extractTenantInfo(authentication);

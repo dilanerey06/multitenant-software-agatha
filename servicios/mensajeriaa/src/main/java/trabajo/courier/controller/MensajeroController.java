@@ -68,7 +68,7 @@ public class MensajeroController {
         @ApiResponse(responseCode = "400", description = "Parámetros de solicitud inválidos")
     })
     public ResponseEntity<ApiResponseWrapper<Page<MensajeroDTO>>> obtenerMensajerosPorTenant(
-            @PageableDefault(size = 20) Pageable pageable,
+            @PageableDefault(size = 50) Pageable pageable,
             Authentication authentication) {
         
         try {

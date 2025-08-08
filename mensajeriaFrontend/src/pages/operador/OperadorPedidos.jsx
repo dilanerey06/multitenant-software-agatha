@@ -38,10 +38,10 @@ export default function OperadorPedidos() {
   const [estadosPedido, setEstadosPedido] = useState([]);
   const [clienteBusqueda, setClienteBusqueda] = useState('');
   const [dropdownClienteVisible, setDropdownClienteVisible] = useState(false);
-const [tipoServicioBusqueda, setTipoServicioBusqueda] = useState('');
-const [dropdownTipoServicioVisible, setDropdownTipoServicioVisible] = useState(false);
-const [mensajeroBusqueda, setMensajeroBusqueda] = useState('');
-const [dropdownMensajeroVisible, setDropdownMensajeroVisible] = useState(false);
+  const [tipoServicioBusqueda, setTipoServicioBusqueda] = useState('');
+  const [dropdownTipoServicioVisible, setDropdownTipoServicioVisible] = useState(false);
+  const [mensajeroBusqueda, setMensajeroBusqueda] = useState('');
+  const [dropdownMensajeroVisible, setDropdownMensajeroVisible] = useState(false);
   const [tarifas, setTarifas] = useState([]);
   const [loadingReferencia, setLoadingReferencia] = useState(false); 
   const [showHistorial, setShowHistorial] = useState(false);
@@ -366,7 +366,7 @@ const getCiudadBarrioEntrega = (pedido) => {
     setEditingPedido(prev => {
       const newPedido = { ...prev };
       
-      if (['clienteId', 'tipoServicioId', 'tarifaId', 'mensajeroId', 'estadoId', 'tiempoEntregaMinutos'].includes(name)) {
+      if (['clienteId', 'tipoServicioId', 'tarifaId', 'mensajeroId', 'estadoId'].includes(name)) {
         newPedido[name] = value ? parseInt(value) : null;
       }
       else if (['pesoKg', 'valorDeclarado', 'costoCompra'].includes(name)) {
@@ -670,7 +670,6 @@ const handleClienteChange = async (e) => {
           tipoPaquete: pedido.tipoPaquete || '',
           pesoKg: pedido.pesoKg || '',
           valorDeclarado: pedido.valorDeclarado || '',
-          tiempoEntregaMinutos: pedido.tiempoEntregaMinutos || '',
           
           tipoServicioId: pedido.tipoServicioId || '',
           tarifaId: pedido.tarifaId || '',
@@ -1129,6 +1128,7 @@ const handleEstadoChange = (e) => {
         nuevosErrores.tipoPaquete = 'El tipo de paquete es requerido';
       }
 
+
       if (Object.keys(nuevosErrores).length > 0) {
         setErrores(nuevosErrores);
         setLoading(false);
@@ -1256,91 +1256,91 @@ const handleEstadoChange = (e) => {
   };
 
 
-const asignarMensajero = async (pedidoId, mensajeroId) => {
-  try {
-    const response = await fetch(`/proxy/api/pedidos/${pedidoId}/asignar-mensajero`, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'x-additional-data': additionalData,
-      },
-      body: JSON.stringify({      
-      mensajeroId: parseInt(mensajeroId), 
-      usuarioId: usuarioId,
-      tenantId: tenantId
-      })
-    });
+  const asignarMensajero = async (pedidoId, mensajeroId) => {
+    try {
+      const response = await fetch(`/proxy/api/pedidos/${pedidoId}/asignar-mensajero`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'x-additional-data': additionalData,
+        },
+        body: JSON.stringify({      
+        mensajeroId: parseInt(mensajeroId), 
+        usuarioId: usuarioId,
+        tenantId: tenantId
+        })
+      });
 
-    if (!response.ok) {
-      throw new Error('Error al asignar mensajero');
+      if (!response.ok) {
+        throw new Error('Error al asignar mensajero');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error al asignar mensajero:', error);
+      throw error;
     }
+  };
 
-    return await response.json();
-  } catch (error) {
-    console.error('Error al asignar mensajero:', error);
-    throw error;
-  }
-};
-
-const validarYAjustarEstado = (mensajeroId, estadoActual) => {
-  const esCreacion = !editingPedido?.id;
-  const tieneMensajero = mensajeroId && mensajeroId !== '';
-  
-  if (esCreacion) {
-    return tieneMensajero ? ESTADOS.ASIGNADO : ESTADOS.PENDIENTE;
-  } else {
-    const estadoActualNumerico = parseInt(estadoActual);
+  const validarYAjustarEstado = (mensajeroId, estadoActual) => {
+    const esCreacion = !editingPedido?.id;
+    const tieneMensajero = mensajeroId && mensajeroId !== '';
     
-    if (estadoActualNumerico >= 1 && estadoActualNumerico <= 5) {
-      if (!tieneMensajero && estadoActualNumerico === ESTADOS.ASIGNADO) {
-        return ESTADOS.PENDIENTE;
+    if (esCreacion) {
+      return tieneMensajero ? ESTADOS.ASIGNADO : ESTADOS.PENDIENTE;
+    } else {
+      const estadoActualNumerico = parseInt(estadoActual);
+      
+      if (estadoActualNumerico >= 1 && estadoActualNumerico <= 5) {
+        if (!tieneMensajero && estadoActualNumerico === ESTADOS.ASIGNADO) {
+          return ESTADOS.PENDIENTE;
+        }
+        
+        return estadoActualNumerico;
       }
       
-      return estadoActualNumerico;
+      return tieneMensajero ? ESTADOS.ASIGNADO : ESTADOS.PENDIENTE;
     }
-    
-    return tieneMensajero ? ESTADOS.ASIGNADO : ESTADOS.PENDIENTE;
-  }
-};
+  };
 
-useEffect(() => {
-  const nuevoEstado = validarYAjustarEstado(formData.mensajeroId, formData.estadoId);
-  
-  if (formData.estadoId !== nuevoEstado) {
+  useEffect(() => {
+    const nuevoEstado = validarYAjustarEstado(formData.mensajeroId, formData.estadoId);
+    
+    if (formData.estadoId !== nuevoEstado) {
+      setFormData(prev => ({
+        ...prev,
+        estadoId: nuevoEstado
+      }));
+    }
+  }, [formData.mensajeroId, editingPedido?.id]);
+
+  const handleMensajeroChange = (e) => {
+    const mensajeroId = e.target.value;
+    const nuevoEstado = validarYAjustarEstado(mensajeroId, formData.estadoId);
+    
     setFormData(prev => ({
       ...prev,
+      mensajeroId: mensajeroId,
       estadoId: nuevoEstado
     }));
-  }
-}, [formData.mensajeroId, editingPedido?.id]);
-
-const handleMensajeroChange = (e) => {
-  const mensajeroId = e.target.value;
-  const nuevoEstado = validarYAjustarEstado(mensajeroId, formData.estadoId);
-  
-  setFormData(prev => ({
-    ...prev,
-    mensajeroId: mensajeroId,
-    estadoId: nuevoEstado
-  }));
-};
+  };
 
 
-const obtenerMensajeInformativo = () => {
-  const esCreacion = !editingPedido?.id;
-  const tieneMensajero = formData.mensajeroId && formData.mensajeroId !== '';
-  
-  if (esCreacion) {
-    return tieneMensajero 
-      ? "Estado se establecerá como 'Asignado' automáticamente"
-      : "Estado se establecerá como 'Pendiente' automáticamente";
-  } else {
-    return tieneMensajero 
-      ? "Estados disponibles: Asignado, En Tránsito, Entregado"
-      : "Estados disponibles: Pendiente, Cancelado";
-  }
-};
+  const obtenerMensajeInformativo = () => {
+    const esCreacion = !editingPedido?.id;
+    const tieneMensajero = formData.mensajeroId && formData.mensajeroId !== '';
+    
+    if (esCreacion) {
+      return tieneMensajero 
+        ? "Estado se establecerá como 'Asignado' automáticamente"
+        : "Estado se establecerá como 'Pendiente' automáticamente";
+    } else {
+      return tieneMensajero 
+        ? "Estados disponibles: Asignado, En Tránsito, Entregado"
+        : "Estados disponibles: Pendiente, Cancelado";
+    }
+  };
 
 
   const handleEditar = async (pedido) => {
@@ -1462,7 +1462,6 @@ const obtenerMensajeInformativo = () => {
           costoCompra: pedido.costoCompra || '',
           subtotal: pedido.subtotal || '',
           total: pedido.total || '',
-          tiempoEntregaMinutos: pedido.tiempoEntregaMinutos || '',
           fechaEntrega: pedido.fechaEntrega ? 
               new Date(pedido.fechaEntrega).toISOString().slice(0, 16) : '',
           notas: pedido.notas || ''
@@ -1919,6 +1918,7 @@ const manejarFechaPersonalizada = (tipo, valor) => {
     };
   }, []);
 
+
   const obtenerHistorialPedido = (pedidoId) => {
     return historialPedidos.filter(historial => historial.pedidoId === pedidoId || historial.pedido_id === pedidoId)
       .map(historial => {
@@ -1950,19 +1950,11 @@ const manejarFechaPersonalizada = (tipo, valor) => {
             .replace(/^\w/, c => c.toUpperCase());
         };
         
-        const obtenerEstadoNombre = (id) => {
-          if (!id) return 'N/A';
+        const obtenerEstadoNombre = (estado) => {
+          if (!estado) return 'N/A';
           
-          const estados = {
-            1: 'pendiente',
-            2: 'asignado',
-            3: 'en_transito', 
-            4: 'entregado',
-            5: 'cancelado'
-          };
-          
-          const nombre = estados[id] || 'N/A';
-          return nombre.replace(/_/g, ' ')
+          return estado.toString()
+            .replace(/_/g, ' ')
             .toLowerCase()
             .replace(/^\w/, c => c.toUpperCase());
         };
@@ -2027,17 +2019,6 @@ const manejarFechaPersonalizada = (tipo, valor) => {
       .sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
   };
 
-  const getTipoCambioNombre = (tipoId) => {
-    const tipo = tiposCambioPedido.find(t => t.id === tipoId);
-    if (!tipo) return 'N/A';
-
-  const formateado = tipo.nombre
-      .replace(/_/g, ' ')
-      .toLowerCase()
-      .replace(/^\w/, c => c.toUpperCase());
-
-    return formateado;
-  };
 
   const getEstadoInfoPorNombre = (nombreEstado) => {
   if (!nombreEstado) return { label: 'Sin estado', color: '#6c757d' };
@@ -2886,7 +2867,7 @@ const PedidosRecientesComponent = () => {
                   <div className="mb-2">
                     <small className="text-muted">
                       <i className="bi bi-currency-dollar me-1" style={{ color: '#4caf50' }}></i>
-                      Valor Declarado:
+                      Valor declarado:
                     </small>
                     <div>${pedido.valorDeclarado.toLocaleString('es-CO')}</div>
                   </div>
@@ -2956,7 +2937,7 @@ const PedidosRecientesComponent = () => {
                   <div className="mb-2">
                     <small className="text-muted">
                       <i className="bi bi-stopwatch me-1" style={{ color: '#ff5722' }}></i>
-                      Tiempo Entrega:
+                      Tiempo entrega:
                     </small>
                     <div>
                       {Math.floor(pedido.tiempoEntregaMinutos / 60)}h {pedido.tiempoEntregaMinutos % 60}m
@@ -2968,7 +2949,7 @@ const PedidosRecientesComponent = () => {
                   <div className="mb-2">
                     <small className="text-muted">
                       <i className="bi bi-calendar-check me-1" style={{ color: '#4caf50' }}></i>
-                      Fecha Entrega:
+                      Fecha entrega:
                     </small>
                     <div>{formatearFecha(pedido.fechaEntrega)}</div>
                   </div>
@@ -3001,6 +2982,7 @@ const PedidosRecientesComponent = () => {
                 <button
                   className="btn btn-sm btn-outline-primary"
                   onClick={() => handleEditar(pedido)}
+                  disabled={pedido.estadoId === 4 || pedido.estadoId === 5}
                 >
                   <i className="bi bi-pencil-square me-1"></i>Editar
                 </button>
@@ -3773,7 +3755,7 @@ const PedidosRecientesComponent = () => {
                       <i className="bi bi-tags me-1" style={{ color: '#ffc107' }}></i>
                       Tarifa <span className="text-danger">*</span>
                     </label>
-                      <select
+                    <select
                       className="form-select"
                       value={formData.tarifaId || ''}
                       onChange={(e) => setFormData({...formData, tarifaId: e.target.value})}
@@ -3781,11 +3763,13 @@ const PedidosRecientesComponent = () => {
                       required
                     >
                       <option value="" disabled hidden>Seleccionar tarifa</option>
-                      {tarifas.map(tarifa => (
-                        <option key={tarifa.id} value={tarifa.id}>
-                          {tarifa.nombre} - ${tarifa.valorFijo} - {tarifa.descripcion}
-                        </option>
-                      ))}
+                      {tarifas
+                        .filter(tarifa => tarifa.activa)
+                        .map(tarifa => (
+                          <option key={tarifa.id} value={tarifa.id}>
+                            {tarifa.nombre} - ${tarifa.valorFijo} - {tarifa.descripcion}
+                          </option>
+                        ))}
                     </select>
                   </div>
                 </div>
@@ -3893,39 +3877,21 @@ const PedidosRecientesComponent = () => {
                     </div>
                   </div>
 
-                  {formData.estadoId === '4' && (
+                  <div className="row">
                     <div className="col-md-6 mb-3">
                       <label className="form-label">
-                        <i className="bi bi-clock me-1" style={{ color: '#fd7e14' }}></i>
-                        Tiempo de entrega (minutos)
+                        <i className="bi bi-calendar-event me-1" style={{ color: '#e83e8c' }}></i>
+                        Fecha de entrega
                       </label>
-                      <input
-                        type="number"
-                        className="form-control"
-                        value={formData.tiempoEntregaMinutos || ''}
-                        onChange={(e) => setFormData({...formData, tiempoEntregaMinutos: e.target.value})}
-                        placeholder="45"
-                        min="1"
-                      />
-                      <div className="form-text">
-                        <small>Solo visible cuando el pedido está entregado</small>
+                      <div 
+                        className="form-control" 
+                        style={{ backgroundColor: '#f8f9fa', cursor: 'not-allowed' }}
+                      >
+                        {formatearFecha(formData.fechaEntrega)}
                       </div>
-                    </div>
-                  )}
-
-                  <div className="col-md-6 mb-3">
-                    <label className="form-label">
-                      <i className="bi bi-calendar-event me-1" style={{ color: '#e83e8c' }}></i>
-                      Fecha de entrega
-                    </label>
-                    <div 
-                    className="form-control" 
-                    style={{ backgroundColor: '#f8f9fa', cursor: 'not-allowed' }}
-                  >
-                    {formatearFecha(formData.fechaEntrega)}
-                    </div>
-                    <div className="form-text">
-                      La fecha se establece automáticamente con la fecha actual
+                      <div className="form-text">
+                        La fecha se establece automáticamente con la fecha actual
+                      </div>
                     </div>
                   </div>
 

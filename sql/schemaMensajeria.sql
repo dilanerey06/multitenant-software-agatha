@@ -1066,7 +1066,7 @@ INSERT IGNORE INTO empresa_mensajeria (tenant_id, nombre, direccion, telefono, e
 -- Insertar usuarios (mensajeria_id = tenant_id)
 INSERT IGNORE INTO usuario (tenant_id, mensajeria_id, nombre_usuario, nombres, apellidos, email, password, rol_id, estado_id) VALUES
 -- Administradores
--- Se quito el admin default para tenant 1
+(1, 1, 'admin1', 'Carlos Alberto', 'Rodríguez Pérez', 'admin@mensajeriarapida.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 2, 1),
 (2, 2, 'admin2', 'María Fernanda', 'González López', 'admin@expressdelivery.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 2, 1),
 (3, 3, 'admin3', 'José Luis', 'Martínez Silva', 'admin@domiciliosnorte.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 2, 2),
 
@@ -1079,6 +1079,7 @@ INSERT IGNORE INTO usuario (tenant_id, mensajeria_id, nombre_usuario, nombres, a
 (1, 1, 'mensajero1', 'Juan Carlos', 'Ramírez Gómez', 'mensajero1@mensajeriarapida.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 1),
 (1, 1, 'mensajero2', 'Pedro Luis', 'Sánchez Torres', 'mensajero2@mensajeriarapida.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 1),
 (1, 1, 'mensajero3', 'Andrés Felipe', 'Vargas Medina', 'mensajero3@mensajeriarapida.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 1),
+(1, 1, 'mensajera4', 'Sandra Milena', 'López Castillo', 'mensajera4@mensajeriarapida.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 1),
 (2, 2, 'mensajero4', 'Miguel Ángel', 'Díaz Rojas', 'mensajero1@expressdelivery.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 1),
 (2, 2, 'mensajero5', 'Roberto Carlos', 'Pineda Uribe', 'mensajero2@expressdelivery.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 1),
 (3, 3, 'mensajero6', 'César Augusto', 'Mejía Cárdenas', 'mensajero1@domiciliosnorte.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 1);
@@ -1164,16 +1165,16 @@ INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, t
 
 -- Pedidos para Mensajería Rápida S.A.S (tenant_id = 1, mensajeria_id = 1)
 (1, 1, 1, 7, 1, 1, 1, 8, '3201234567', '3111234567', 'Comida preparada', 2.50, 45000.00, 0.00, 8000.00, 8000.00, 3, 45, 'Entregar en recepción, apartamento 301'),
-(1, 2, 1, 8, 2, 4, 2, 9, '3109876543', '3122345678', 'Medicamentos', 0.50, 85000.00, 0.00, 5000.00, 5000.00, 4, NULL, 'Pedido entregado exitosamente'),
+(1, 2, 1, 8, 2, 4, 2, 9, '3109876543', '3122345678', 'Medicamentos', 0.50, 85000.00, 0.00, 5000.00, 5000.00, 4, 38, 'Pedido entregado exitosamente'),
 (1, 3, 1, 7, 1, 2, 3, 10, '3187654321', '3133456789', 'Productos varios', 3.20, 120000.00, 0.00, 10000.00, 10000.00, 2, NULL, 'Cliente prefiere entrega después de las 3 PM'),
 (1, 4, 1, NULL, 2, 5, 4, 11, '3156789012', '3144567890', 'Víveres', 5.80, 230000.00, 0.00, 6500.00, 6500.00, 1, NULL, 'Mercado semanal, manejar con cuidado'),
 
 -- Pedidos para Express Delivery LTDA (tenant_id = 2, mensajeria_id = 2)
-(2, 5, 2, 10, 4, 13, 5, 12, '3143216789', '3155678901', 'Torta de cumpleaños', 2.00, 75000.00, 65000.00, 12000.00, 12000.00, 4, NULL, 'Compra realizada en Panadería Central'),
-(2, 6, 2, 11, 6, 12, 6, 13, '3198765432', '3166789012', 'Libros académicos', 1.20, 180000.00, 0.00, 4500.00, 4500.00, 3, 30, 'Material de estudio universitario'),
+(2, 5, 2, 11, 4, 13, 5, 12, '3143216789', '3155678901', 'Torta de cumpleaños', 2.00, 75000.00, 65000.00, 12000.00, 12000.00, 4, NULL, 'Compra realizada en Panadería Central'),
+(2, 6, 2, 12, 6, 12, 6, 13, '3198765432', '3166789012', 'Libros académicos', 1.20, 180000.00, 0.00, 4500.00, 4500.00, 3, 30, 'Material de estudio universitario'),
 
 -- Pedidos para Domicilios Norte (tenant_id = 3, mensajeria_id = 3)
-(3, 7, 3, 12, 1, 17, 7, 14, '3165432109', '3177890123', 'Pizza familiar', 1.50, 42000.00, 0.00, 8500.00, 8500.00, 2, NULL, 'Pizza hawaiana, entregar caliente');
+(3, 7, 3, 13, 1, 17, 7, 14, '3165432109', '3177890123', 'Pizza familiar', 1.50, 42000.00, 0.00, 8500.00, 8500.00, 2, NULL, 'Pizza hawaiana, entregar caliente');
 
 -- Pedidos sin cliente registrado (temporales)
 INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, tipo_servicio_id, tarifa_id, 
@@ -1181,7 +1182,7 @@ INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, t
 					ciudad_recogida, barrio_recogida, ciudad_entrega, barrio_entrega, telefono_recogida, telefono_entrega, 
 					tipo_paquete, peso_kg, valor_declarado, costo_compra, subtotal, total, estado_id, tiempo_entrega_minutos, notas) VALUES 
 -- Pedido sin cliente para Mensajería Rápida S.A.S (tenant_id = 1)
-(1, NULL, 1, 9, 6, 7, NULL, NULL, 'Calle 40 #25-30, Oficina 201', 'Carrera 50 #60-40, Casa blanca',  'Bucaramanga', 'Centro', 'Bucaramanga', 'Provenza', '3201111111', '3202222222', 'Documentos legales', 0.20, 150000.00, 0.00, 4000.00, 4000.00, 4, NULL, 'Contratos importantes, manejar con cuidado'),
+(1, NULL, 1, 9, 6, 7, NULL, NULL, 'Calle 40 #25-30, Oficina 201', 'Carrera 50 #60-40, Casa blanca',  'Bucaramanga', 'Centro', 'Bucaramanga', 'Provenza', '3201111111', '3202222222', 'Documentos legales', 0.20, 150000.00, 0.00, 4000.00, 4000.00, 4, 42, 'Contratos importantes, manejar con cuidado'),
 
 -- Pedido sin cliente para Express Delivery LTDA (tenant_id = 2)
 (2, NULL, 2, NULL, 8, 14, NULL, NULL, 'Centro Comercial La Quinta, Local 45', 'Avenida Los Estudiantes #78-90', 'Bucaramanga', 'Centro', 'Bucaramanga', 'Universidad', '3203333333', '3204444444', 'Comida china', 2.80, 35000.00, 28000.00, 8500.00, 8500.00, 1, NULL, 'Compra en restaurante Golden Dragon');
@@ -1302,8 +1303,8 @@ INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, t
 -- Diciembre 2024 - Pedidos 10-13
 (1, 1, 1, 7, 2, 4, 1, 8, '3201234567', '3111234567', 'Almuerzo ejecutivo', 1.80, 35000.00, 0.00, 5000.00, 5000.00, 4, 35, 'Entregado en oficina', '2024-12-22 12:15:00', '2024-12-22 12:50:00'),
 (1, 3, 1, 8, 1, 1, 3, 10, '3187654321', '3133456789', 'Productos navideños', 4.50, 180000.00, 0.00, 8000.00, 8000.00, 4, 55, 'Decoraciones navideñas', '2024-12-23 15:20:00', '2024-12-23 16:15:00'),
-(2, 1, 2, 10, 1, 9, 5, 12, '3143216789', '3155678901', 'Regalos navideños', 3.20, 220000.00, 0.00, 9000.00, 9000.00, 4, 42, 'Envueltos para regalo', '2024-12-24 10:30:00', '2024-12-24 11:12:00'),
-(2, 2, 2, 11, 2, 12, 6, 13, '3198765432', '3166789012', 'Material escolar', 2.10, 95000.00, 0.00, 4500.00, 4500.00, 4, 28, 'Fin de año escolar', '2024-12-28 14:45:00', '2024-12-28 15:13:00');
+(2, 1, 2, 9, 1, 9, 5, 12, '3143216789', '3155678901', 'Regalos navideños', 3.20, 220000.00, 0.00, 9000.00, 9000.00, 4, 42, 'Envueltos para regalo', '2024-12-24 10:30:00', '2024-12-24 11:12:00'),
+(2, 2, 2, 10, 2, 12, 6, 13, '3198765432', '3166789012', 'Material escolar', 2.10, 95000.00, 0.00, 4500.00, 4500.00, 4, 28, 'Fin de año escolar', '2024-12-28 14:45:00', '2024-12-28 15:13:00');
 
 -- ENERO 2025
 INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, tipo_servicio_id, tarifa_id, 
@@ -1314,7 +1315,7 @@ INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, t
 (1, 2, 1, 9, 7, 8, 2, 9, '3109876543', '3122345678', 'Medicinas urgentes', 0.80, 125000.00, 0.00, 7000.00, 7000.00, 4, 25, 'Medicamento controlado', '2025-01-05 08:30:00', '2025-01-05 08:55:00'),
 (1, 4, 1, 7, 2, 5, 4, 11, '3156789012', '3144567890', 'Compra semanal', 6.20, 280000.00, 0.00, 6500.00, 6500.00, 4, 48, 'Productos perecederos', '2025-01-12 16:20:00', '2025-01-12 17:08:00'),
 (2, 3, 2, 10, 4, 13, 5, 12, '3143216789', '3155678901', 'Torta cumpleaños', 2.50, 85000.00, 75000.00, 12000.00, 12000.00, 4, 38, 'Compra en pastelería', '2025-01-18 14:15:00', '2025-01-18 14:53:00'),
-(3, 4, 3, 12, 1, 17, 7, 14, '3165432109', '3177890123', 'Comida italiana', 2.80, 58000.00, 0.00, 8500.00, 8500.00, 4, 33, 'Pasta y pizza', '2025-01-25 19:40:00', '2025-01-25 20:13:00');
+(3, 4, 3, 8, 1, 17, 7, 14, '3165432109', '3177890123', 'Comida italiana', 2.80, 58000.00, 0.00, 8500.00, 8500.00, 4, 33, 'Pasta y pizza', '2025-01-25 19:40:00', '2025-01-25 20:13:00');
 
 -- FEBRERO 2025
 INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, tipo_servicio_id, tarifa_id, 
@@ -1324,8 +1325,8 @@ INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, t
 
 (1, 1, 1, 8, 1, 2, 1, 8, '3201234567', '3111234567', 'Cena romántica', 2.20, 95000.00, 0.00, 10000.00, 10000.00, 4, 47, 'San Valentín - manejar con cuidado', '2025-02-14 18:30:00', '2025-02-14 19:17:00'),
 (1, 3, 1, 9, 6, 7, 3, 10, '3187654321', '3133456789', 'Documentos legales', 0.30, 200000.00, 0.00, 4000.00, 4000.00, 4, 22, 'Contratos importantes', '2025-02-20 10:15:00', '2025-02-20 10:37:00'),
-(2, 1, 2, 11, 2, 12, 6, 13, '3198765432', '3166789012', 'Libros universitarios', 3.50, 450000.00, 0.00, 4500.00, 4500.00, 4, 31, 'Nuevo semestre', '2025-02-03 09:20:00', '2025-02-03 09:51:00'),
-(3, 2, 3, 12, 1, 17, 7, 14, '3165432109', '3177890123', 'Desayuno especial', 1.20, 42000.00, 0.00, 8500.00, 8500.00, 4, 29, 'Desayuno continental', '2025-02-28 07:45:00', '2025-02-28 08:14:00');
+(2, 1, 2, 10, 2, 12, 6, 13, '3198765432', '3166789012', 'Libros universitarios', 3.50, 450000.00, 0.00, 4500.00, 4500.00, 4, 31, 'Nuevo semestre', '2025-02-03 09:20:00', '2025-02-03 09:51:00'),
+(3, 2, 3, 7, 1, 17, 7, 14, '3165432109', '3177890123', 'Desayuno especial', 1.20, 42000.00, 0.00, 8500.00, 8500.00, 4, 29, 'Desayuno continental', '2025-02-28 07:45:00', '2025-02-28 08:14:00');
 
 -- MARZO 2025
 INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, tipo_servicio_id, tarifa_id, 
@@ -1336,7 +1337,7 @@ INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, t
 (1, 2, 1, 7, 7, 8, 2, 9, '3109876543', '3122345678', 'Suplementos vitamínicos', 1.50, 180000.00, 0.00, 7000.00, 7000.00, 4, 26, 'Vitaminas del mes', '2025-03-08 11:20:00', '2025-03-08 11:46:00'),
 (1, 4, 1, 8, 2, 6, 4, 11, '3156789012', '3144567890', 'Compras hogar', 7.80, 380000.00, 0.00, 8000.00, 8000.00, 4, 52, 'Productos de limpieza', '2025-03-15 13:40:00', '2025-03-15 14:32:00'),
 (2, 3, 2, 10, 1, 9, 5, 12, '3143216789', '3155678901', 'Postres gourmet', 1.80, 120000.00, 0.00, 9000.00, 9000.00, 4, 36, 'Celebración familiar', '2025-03-22 15:10:00', '2025-03-22 15:46:00'),
-(3, 4, 3, 12, 2, 18, 7, 14, '3165432109', '3177890123', 'Almuerzo familiar', 4.20, 85000.00, 0.00, 5500.00, 5500.00, 4, 41, 'Pizza y lasaña', '2025-03-29 13:25:00', '2025-03-29 14:06:00');
+(3, 4, 3, 9, 2, 18, 7, 14, '3165432109', '3177890123', 'Almuerzo familiar', 4.20, 85000.00, 0.00, 5500.00, 5500.00, 4, 41, 'Pizza y lasaña', '2025-03-29 13:25:00', '2025-03-29 14:06:00');
 
 -- ABRIL 2025
 INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, tipo_servicio_id, tarifa_id, 
@@ -1346,7 +1347,7 @@ INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, t
 
 (1, 1, 1, 9, 1, 1, 1, 8, '3201234567', '3111234567', 'Catering evento', 8.50, 650000.00, 0.00, 8000.00, 8000.00, 4, 58, 'Evento corporativo', '2025-04-10 16:00:00', '2025-04-10 16:58:00'),
 (1, 3, 1, 7, 2, 4, 3, 10, '3187654321', '3133456789', 'Artículos oficina', 3.20, 250000.00, 0.00, 5000.00, 5000.00, 4, 34, 'Material de oficina', '2025-04-17 10:30:00', '2025-04-17 11:04:00'),
-(2, 2, 2, 11, 6, 12, 6, 13, '3198765432', '3166789012', 'Documentos académicos', 0.50, 80000.00, 0.00, 4500.00, 4500.00, 4, 24, 'Certificados y diplomas', '2025-04-05 14:20:00', '2025-04-05 14:44:00'),
+(2, 2, 2, 8, 6, 12, 6, 13, '3198765432', '3166789012', 'Documentos académicos', 0.50, 80000.00, 0.00, 4500.00, 4500.00, 4, 24, 'Certificados y diplomas', '2025-04-05 14:20:00', '2025-04-05 14:44:00'),
 (2, 4, 2, 10, 4, 13, 5, 12, '3143216789', '3155678901', 'Ingredientes especiales', 2.30, 150000.00, 130000.00, 12000.00, 12000.00, 4, 45, 'Compra en mercado gourmet', '2025-04-24 11:15:00', '2025-04-24 12:00:00');
 
 -- MAYO 2025
@@ -1358,7 +1359,7 @@ INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, t
 (1, 2, 1, 8, 7, 8, 2, 9, '3109876543', '3122345678', 'Medicamentos crónicos', 0.90, 95000.00, 0.00, 7000.00, 7000.00, 4, 27, 'Tratamiento mensual', '2025-05-02 09:45:00', '2025-05-02 10:12:00'),
 (1, 4, 1, 9, 2, 5, 4, 11, '3156789012', '3144567890', 'Despensa familiar', 9.20, 420000.00, 0.00, 6500.00, 6500.00, 4, 61, 'Compra quincenal', '2025-05-16 17:30:00', '2025-05-16 18:31:00'),
 (2, 1, 2, 10, 1, 10, 5, 12, '3143216789', '3155678901', 'Torta día de la madre', 3.80, 180000.00, 0.00, 7500.00, 7500.00, 4, 39, 'Celebración especial', '2025-05-11 12:20:00', '2025-05-11 12:59:00'),
-(3, 3, 3, 12, 1, 17, 7, 14, '3165432109', '3177890123', 'Cena italiana', 3.50, 95000.00, 0.00, 8500.00, 8500.00, 4, 44, 'Pasta artesanal', '2025-05-23 18:15:00', '2025-05-23 18:59:00');
+(3, 3, 3, 7, 1, 17, 7, 14, '3165432109', '3177890123', 'Cena italiana', 3.50, 95000.00, 0.00, 8500.00, 8500.00, 4, 44, 'Pasta artesanal', '2025-05-23 18:15:00', '2025-05-23 18:59:00');
 
 -- JUNIO 2025
 INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, tipo_servicio_id, tarifa_id, 
@@ -1368,8 +1369,8 @@ INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, t
 
 (1, 1, 1, 7, 1, 2, 1, 8, '3201234567', '3111234567', 'Comida día del padre', 4.20, 150000.00, 0.00, 10000.00, 10000.00, 4, 49, 'Celebración papá', '2025-06-15 13:00:00', '2025-06-15 13:49:00'),
 (1, 3, 1, 8, 6, 7, 3, 10, '3187654321', '3133456789', 'Certificados digitales', 0.20, 120000.00, 0.00, 4000.00, 4000.00, 4, 18, 'Documentos urgentes', '2025-06-08 15:40:00', '2025-06-08 15:58:00'),
-(2, 4, 2, 11, 2, 12, 6, 13, '3198765432', '3166789012', 'Libros vacaciones', 2.80, 320000.00, 0.00, 4500.00, 4500.00, 4, 32, 'Lectura de verano', '2025-06-20 11:30:00', '2025-06-20 12:02:00'),
-(3, 2, 3, 12, 2, 18, 7, 14, '3165432109', '3177890123', 'Helados artesanales', 1.50, 65000.00, 0.00, 5500.00, 5500.00, 4, 25, 'Postres de verano', '2025-06-27 16:45:00', '2025-06-27 17:10:00');
+(2, 4, 2, 9, 2, 12, 6, 13, '3198765432', '3166789012', 'Libros vacaciones', 2.80, 320000.00, 0.00, 4500.00, 4500.00, 4, 32, 'Lectura de verano', '2025-06-20 11:30:00', '2025-06-20 12:02:00'),
+(3, 2, 3, 10, 2, 18, 7, 14, '3165432109', '3177890123', 'Helados artesanales', 1.50, 65000.00, 0.00, 5500.00, 5500.00, 4, 25, 'Postres de verano', '2025-06-27 16:45:00', '2025-06-27 17:10:00');
 
 -- JULIO 2025
 INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, tipo_servicio_id, tarifa_id, 
@@ -1380,7 +1381,7 @@ INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, t
 (1, 2, 1, 9, 7, 8, 2, 9, '3109876543', '3122345678', 'Medicina deportiva', 1.20, 85000.00, 0.00, 7000.00, 7000.00, 4, 23, 'Suplementos deportivos', '2025-07-04 10:20:00', '2025-07-04 10:43:00'),
 (1, 4, 1, 7, 2, 6, 4, 11, '3156789012', '3144567890', 'Productos verano', 5.60, 290000.00, 0.00, 8000.00, 8000.00, 4, 46, 'Protectores solares', '2025-07-11 14:15:00', '2025-07-11 15:01:00'),
 (2, 1, 2, 10, 4, 13, 5, 12, '3143216789', '3155678901', 'Postre helado', 2.10, 95000.00, 85000.00, 12000.00, 12000.00, 4, 37, 'Compra en heladería', '2025-07-18 15:30:00', '2025-07-18 16:07:00'),
-(2, 3, 2, 11, 1, 9, 6, 13, '3198765432', '3166789012', 'Material curso', 1.90, 180000.00, 0.00, 9000.00, 9000.00, 4, 41, 'Curso de verano', '2025-07-25 09:10:00', '2025-07-25 09:51:00');
+(2, 3, 2, 8, 1, 9, 6, 13, '3198765432', '3166789012', 'Material curso', 1.90, 180000.00, 0.00, 9000.00, 9000.00, 4, 41, 'Curso de verano', '2025-07-25 09:10:00', '2025-07-25 09:51:00');
 
 -- AGOSTO 2025
 INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, tipo_servicio_id, tarifa_id, 
@@ -1391,7 +1392,7 @@ INSERT IGNORE INTO pedido (tenant_id, cliente_id, mensajeria_id, mensajero_id, t
 (1, 1, 1, 8, 1, 1, 1, 8, '3201234567', '3111234567', 'Almuerzo de negocios', 3.20, 180000.00, 0.00, 8000.00, 8000.00, 3, 0, 'Reunión importante', '2025-08-01 12:30:00', NULL),
 (1, 3, 1, 9, 2, 4, 3, 10, '3187654321', '3133456789', 'Útiles escolares', 2.80, 150000.00, 0.00, 5000.00, 5000.00, 2, 0, 'Regreso a clases', '2025-08-05 08:45:00', NULL),
 (2, 4, 2, NULL, 1, 9, 5, 12, '3143216789', '3155678901', 'Torta cumpleaños', 2.50, 120000.00, 0.00, 9000.00, 9000.00, 1, 0, 'Pendiente asignación', '2025-08-06 10:15:00', NULL),
-(3, 2, 3, 12, 2, 18, 7, 14, '3165432109', '3177890123', 'Almuerzo ejecutivo', 2.20, 75000.00, 0.00, 5500.00, 5500.00, 2, 0, 'Cliente VIP', '2025-08-06 11:20:00', NULL);
+(3, 2, 3, 10, 2, 18, 7, 14, '3165432109', '3177890123', 'Almuerzo ejecutivo', 2.20, 75000.00, 0.00, 5500.00, 5500.00, 2, 0, 'Cliente VIP', '2025-08-06 11:20:00', NULL);
 
 INSERT IGNORE INTO historial_pedido (pedido_id, tipo_cambio_id, valor_anterior, valor_nuevo, usuario_id) VALUES
 -- Diciembre 2024
@@ -1761,3 +1762,19 @@ INSERT IGNORE INTO notificacion (tenant_id, usuario_id, tipo_notificacion_id, ti
 (1, 8, 2, 'Nuevo pedido asignado', 'Se te ha asignado el pedido #42 - Almuerzo de negocios', FALSE),
 (1, 9, 2, 'Nuevo pedido asignado', 'Se te ha asignado el pedido #43 - Útiles escolares', FALSE),
 (3, 12, 2, 'Nuevo pedido asignado', 'Se te ha asignado el pedido #45 - Almuerzo ejecutivo', FALSE);
+
+-- Actualizar pedidos_activos basado en los pedidos reales en estados activos (2: asignado, 3: en_transito)
+UPDATE mensajero m
+SET pedidos_activos = (
+    SELECT COALESCE(COUNT(*), 0)
+    FROM pedido p
+    WHERE p.mensajero_id = m.id 
+    AND p.estado_id IN (2, 3)  
+);
+
+-- Actualizar disponibilidad basada en el nuevo contador
+UPDATE mensajero 
+SET disponibilidad = CASE 
+    WHEN pedidos_activos < max_pedidos_simultaneos THEN TRUE 
+    ELSE FALSE 
+END;
