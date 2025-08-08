@@ -1947,10 +1947,27 @@ const manejarFechaPersonalizada = (tipo, valor) => {
             .replace(/^\w/, c => c.toUpperCase());
         };
         
-        const obtenerEstadoNombre = (estado) => {
-          if (!estado) return 'N/A';
+        const obtenerEstadoNombre = (valor) => {
+          if (!valor || valor === 'NULL' || valor === 'null') return 'N/A';
           
-          return estado.toString()
+          // Mapeo de IDs a nombres de estados
+          const estadosPorId = {
+            1: 'pendiente',
+            2: 'asignado', 
+            3: 'en_transito',
+            4: 'entregado',
+            5: 'cancelado'
+          };
+          
+          const numeroValor = parseInt(valor);
+          if (!isNaN(numeroValor) && estadosPorId[numeroValor]) {
+            const nombre = estadosPorId[numeroValor];
+            return nombre.replace(/_/g, ' ')
+              .toLowerCase()
+              .replace(/^\w/, c => c.toUpperCase());
+          }
+          
+          return valor.toString()
             .replace(/_/g, ' ')
             .toLowerCase()
             .replace(/^\w/, c => c.toUpperCase());
