@@ -3431,12 +3431,18 @@ const PedidosRecientesComponent = () => {
                             setMensajeroBusqueda(e.target.value);
                             setDropdownMensajeroVisible(true);
                           }}
-                          onFocus={() => setDropdownMensajeroVisible(true)}
+                          onFocus={() => {
+                            setDropdownMensajeroVisible(true)
+                            setMensajeroBusqueda('');
+                          }}
                         />
                         <button
                           className="btn btn-outline-secondary"
                           type="button"
-                          onClick={() => setDropdownMensajeroVisible(!dropdownMensajeroVisible)}
+                          onClick={() => {
+                            setDropdownMensajeroVisible(!dropdownMensajeroVisible);
+                            setMensajeroBusqueda('');  
+                          }}
                         >
                           <i className="bi bi-chevron-down"></i>
                         </button>
