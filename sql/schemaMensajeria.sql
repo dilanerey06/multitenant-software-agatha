@@ -1778,3 +1778,11 @@ SET disponibilidad = CASE
     WHEN pedidos_activos < max_pedidos_simultaneos THEN TRUE 
     ELSE FALSE 
 END;
+
+-- Arqueos para caso de prueba CP-015
+INSERT IGNORE INTO arqueo_caja (tenant_id, mensajeria_id, usuario_id, fecha, turno_id, 
+efectivo_inicio, egresos, efectivo_real, estado_id, observaciones) VALUES
+-- Arqueos para Mensajería Rápida S.A.S (tenant_id = 1)
+(1, 1, 1, '2025-08-08', 1, 50000.00, 4000.00, 67000.00, 2, 'Arqueo turno mañana - Sin diferencias'),
+(1, 1, 1, '2025-08-08', 2, 67000.00, 6000.00, 88000.00, 2, 'Arqueo turno tarde - Todo en orden'),
+(1, 1, 1, '2025-08-08', 3, 88000.00, 3000.00, 102000.00, 2, 'Arqueo turno noche - Caja correcta');
