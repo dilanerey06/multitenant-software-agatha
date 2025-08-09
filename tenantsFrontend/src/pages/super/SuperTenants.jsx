@@ -402,7 +402,7 @@ export default function SuperTenants() {
         alert('Tenant y todos sus usuarios asociados desactivados correctamente');
       } catch (error) {
         console.error('Error al desactivar tenant:', error);
-        alert('Error al desactivar tenant ->', error);
+        alert('Error al desactivar tenant');
       }
     }
   };

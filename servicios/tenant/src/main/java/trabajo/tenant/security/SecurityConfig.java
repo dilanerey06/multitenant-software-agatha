@@ -55,7 +55,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowCredentials(true);
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000","http://middleware-service:8082", "http://localhost:3001","http://react-frontend-tenants:80")); //
+        configuration.setAllowedOrigins(Arrays.asList("http://34.63.118.136:3000","http://middleware-service:8082", "http://34.63.118.136:3001","http://react-frontend-tenants:80")); //
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setExposedHeaders(Arrays.asList("Authorization"));
